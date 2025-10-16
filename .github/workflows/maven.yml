@@ -90,6 +90,15 @@ jobs:
     - name: Generate SpotBugs SARIF
       run: ./mvnw spotbugs:spotbugs -Dspotbugs.outputFormat=sarif -Dspotbugs.outputFile=spotbugs.sarif
       
+    - name: Check if SARIF file exists
+      run: |
+        echo "Checking for spotbugs.sarif file..."
+        ls -la spotbugs.sarif || echo "File not found"
+        if [ -f spotbugs.sarif ]; then
+          echo "File exists, size: $(wc -c < spotbugs.sarif) bytes"
+          head -5 spotbugs.sarif || echo "File is empty or unreadable"
+        fi
+      
     - name: Upload SpotBugs SARIF to GitHub
       if: always() && hashFiles('spotbugs.sarif') != ''
       uses: github/codeql-action/upload-sarif@v3
