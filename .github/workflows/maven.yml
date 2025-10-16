@@ -95,7 +95,7 @@ jobs:
         echo "Checking for spotbugs.sarif file..."
         ls -la spotbugs.sarif || echo "File not found"
         if [ -f spotbugs.sarif ]; then
-          echo "File exists, size: $(wc -c < spotbugs.sarif) bytes"
+          echo "File exists, size: $(wc -c < spotbugs.sarif) bytes" 
           head -5 spotbugs.sarif || echo "File is empty or unreadable"
         fi
       
@@ -247,7 +247,6 @@ jobs:
           type=raw,value=${{ github.sha }}
           type=raw,value=latest,enable={{is_default_branch}}
           type=raw,value=staging,enable=${{ github.ref == 'refs/heads/main' }}
-          type=raw,value=content-service,enable=${{ github.ref == 'refs/heads/YM-49' || github.head_ref == 'YM-49' }}
           
     - name: Build and push Docker image
       id: build
