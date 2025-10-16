@@ -2,7 +2,7 @@ name: Content Service CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, YM-49 ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
     types: [opened, synchronize, reopened]
