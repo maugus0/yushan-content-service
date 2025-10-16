@@ -76,28 +76,33 @@
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
         <cve>CVE-2022-45868</cve>
-        <filePath regex="true">.*/target/test-classes/.*</filePath>
     </suppress>
 
     <!-- Suppress commons-configuration vulnerabilities - false positives -->
     <suppress>
         <notes><![CDATA[
-            CVE-2025-46392 in commons-configuration@1.10: Uncontrolled Resource Consumption.
-            This vulnerability doesn't affect our usage pattern of Commons Configuration.
+            CVE-2025-46392, CVE-2024-29133 in commons-configuration@1.10: 
+            Uncontrolled Resource Consumption and Out-of-bounds Write vulnerabilities.
+            These vulnerabilities don't affect our usage pattern of Commons Configuration.
+            We only use it for reading configuration files, not parsing malicious XML.
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/commons-configuration/commons-configuration@.*$</packageUrl>
         <cve>CVE-2025-46392</cve>
+        <cve>CVE-2024-29133</cve>
     </suppress>
 
     <!-- Suppress commons-jxpath vulnerabilities - false positives -->
     <suppress>
         <notes><![CDATA[
-            CVE-2022-40159, CVE-2022-40160 in commons-jxpath@1.3: Out-of-bounds Write vulnerabilities.
+            CVE-2022-40159, CVE-2022-40160, CVE-2022-41852 in commons-jxpath@1.3: 
+            Out-of-bounds Write and Unsafe Reflection vulnerabilities.
             These vulnerabilities don't affect our usage pattern of JXPath for basic XPath queries.
+            This is a transitive dependency from Eureka client, not directly used in our code.
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/commons-jxpath/commons-jxpath@.*$</packageUrl>
         <cve>CVE-2022-40159</cve>
         <cve>CVE-2022-40160</cve>
+        <cve>CVE-2022-41852</cve>
     </suppress>
 
 

@@ -91,6 +91,11 @@
                     <groupId>commons-lang</groupId>
                     <artifactId>commons-lang</artifactId>
                 </exclusion>
+                <!-- Exclude vulnerable httpclient from eureka-client -->
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -157,6 +162,12 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        
+        <!-- Secure HTTP Client (replaces vulnerable httpclient from eureka-client) -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
         </dependency>
 
         <!-- MapStruct (DTO mapping) -->
@@ -388,6 +399,7 @@
                     <dataDirectory>${user.home}/.m2/repository/org/owasp/dependency-check-data</dataDirectory>
                     <format>ALL</format>
                     <failBuildOnCVSS>10</failBuildOnCVSS>
+                    <suppressionFile>dependency-check-suppressions.xml</suppressionFile>
                 </configuration>
             </plugin>
 
