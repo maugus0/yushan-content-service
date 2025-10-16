@@ -31,7 +31,7 @@
         <spring-cloud.version>2024.0.2</spring-cloud.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <sonar.projectKey>yushan-content-service</sonar.projectKey>
+        <sonar.projectKey>maugus0_yushan-content-service</sonar.projectKey>
         <sonar.organization>yushan</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
