@@ -16,8 +16,10 @@ RUN chmod +x ./mvnw
 RUN --mount=type=cache,target=/root/.m2/repository \
     ./mvnw dependency:go-offline -B
 
-# Copy source code
+# Copy source code and configuration files
 COPY src src
+COPY checkstyle.xml .
+COPY dependency-check-suppressions.xml .
 
 # Build the application with Maven cache (skip tests for faster builds)
 RUN --mount=type=cache,target=/root/.m2/repository \

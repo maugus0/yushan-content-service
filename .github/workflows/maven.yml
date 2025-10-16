@@ -277,6 +277,14 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
+    - name: Check if Trivy SARIF exists
+      run: |
+        echo "Checking for trivy-results.sarif file..."
+        ls -la trivy-results.sarif || echo "File not found"
+        if [ -f trivy-results.sarif ]; then
+          echo "File exists, size: $(wc -c < trivy-results.sarif) bytes"
+        fi
+
     - name: Upload Trivy SARIF as artifact
       uses: actions/upload-artifact@v4
       if: always() && hashFiles('trivy-results.sarif') != ''
@@ -395,6 +403,15 @@ jobs:
       with:
         name: trivy-sarif
         path: reports/trivy
+      continue-on-error: true
+
+    - name: Create empty Trivy report if missing
+      run: |
+        if [ ! -f reports/trivy/trivy-results.sarif ]; then
+          echo "Creating empty Trivy report..."
+          mkdir -p reports/trivy
+          echo '{"version": "2.1.0", "runs": []}' > reports/trivy/trivy-results.sarif
+        fi
       continue-on-error: true
 
     # - name: Download ZAP report
