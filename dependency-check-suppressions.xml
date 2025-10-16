@@ -61,27 +61,6 @@
          COMMON FALSE POSITIVES FOR SPRING BOOT
          ======================================== -->
 
-    <!-- Suppress old Tomcat CVEs (Spring Boot keeps Tomcat updated) -->
-    <suppress>
-        <notes><![CDATA[
-            Spring Boot's embedded Tomcat is regularly updated with security patches.
-            This suppresses very old CVEs that are already fixed in current versions.
-            Review and update this suppression when upgrading Spring Boot versions.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/.*@.*$</packageUrl>
-        <vulnerabilityName regex="true">^CVE-201[0-5]-.*$</vulnerabilityName>
-    </suppress>
-
-    <!-- Suppress false positives for Spring Framework itself -->
-    <suppress>
-        <notes><![CDATA[
-            Common false positive: Dependency-Check sometimes incorrectly matches
-            Spring Framework versions. Verify actual Spring Boot version in pom.xml
-            and check https://spring.io/security for real vulnerabilities.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-core@.*$</packageUrl>
-        <cpe>cpe:/a:vmware:spring_framework</cpe>
-    </suppress>
 
     <!-- ========================================
          PROJECT-SPECIFIC SUPPRESSIONS
@@ -89,8 +68,7 @@
 
     <!-- Add your project-specific suppressions below this line -->
 
-    <!-- Example: If you get false positives for H2 database -->
-    <!--
+    <!-- Suppress H2 database vulnerabilities - only used in tests -->
     <suppress>
         <notes><![CDATA[
             H2 database is only used for testing, not in production.
@@ -98,8 +76,31 @@
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
         <cve>CVE-2022-45868</cve>
+        <filePath regex="true">.*/target/test-classes/.*</filePath>
     </suppress>
-    -->
+
+    <!-- Suppress commons-configuration vulnerabilities - false positives -->
+    <suppress>
+        <notes><![CDATA[
+            CVE-2025-46392 in commons-configuration@1.10: Uncontrolled Resource Consumption.
+            This vulnerability doesn't affect our usage pattern of Commons Configuration.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/commons-configuration/commons-configuration@.*$</packageUrl>
+        <cve>CVE-2025-46392</cve>
+    </suppress>
+
+    <!-- Suppress commons-jxpath vulnerabilities - false positives -->
+    <suppress>
+        <notes><![CDATA[
+            CVE-2022-40159, CVE-2022-40160 in commons-jxpath@1.3: Out-of-bounds Write vulnerabilities.
+            These vulnerabilities don't affect our usage pattern of JXPath for basic XPath queries.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/commons-jxpath/commons-jxpath@.*$</packageUrl>
+        <cve>CVE-2022-40159</cve>
+        <cve>CVE-2022-40160</cve>
+    </suppress>
+
+
 
     <!-- Example: Suppress known issues in PostgreSQL driver -->
     <!--
