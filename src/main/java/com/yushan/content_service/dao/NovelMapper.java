@@ -1,5 +1,6 @@
 package com.yushan.content_service.dao;
 
+import com.yushan.content_service.dto.novel.NovelSearchRequestDTO;
 import com.yushan.content_service.entity.Novel;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -30,41 +31,15 @@ public interface NovelMapper {
     // Additional query methods
     Novel selectByUuid(@Param("uuid") UUID uuid);
     
-    List<Novel> selectByAuthorId(@Param("authorId") UUID authorId);
-    
-    List<Novel> selectByCategoryId(@Param("categoryId") Integer categoryId);
-    
-    List<Novel> selectByStatus(@Param("status") Integer status);
-    
     // Pagination and filtering methods
-    List<Novel> selectNovelsWithPagination(@Param("offset") int offset, 
-                                          @Param("limit") int limit,
-                                          @Param("categoryId") Integer categoryId,
-                                          @Param("status") Integer status,
-                                          @Param("search") String search,
-                                          @Param("authorId") UUID authorId,
-                                          @Param("sortBy") String sortBy,
-                                          @Param("sortOrder") String sortOrder);
+    List<Novel> selectNovelsWithPagination(@Param("req") NovelSearchRequestDTO req);
     
-    long countNovels(@Param("categoryId") Integer categoryId,
-                    @Param("status") Integer status,
-                    @Param("search") String search,
-                    @Param("authorId") UUID authorId);
+    long countNovels(@Param("req") NovelSearchRequestDTO req);
     
     // Admin methods (including ARCHIVED novels)
-    List<Novel> selectAllNovelsWithPagination(@Param("offset") int offset, 
-                                             @Param("limit") int limit,
-                                             @Param("categoryId") Integer categoryId,
-                                             @Param("status") Integer status,
-                                             @Param("search") String search,
-                                             @Param("authorId") UUID authorId,
-                                             @Param("sortBy") String sortBy,
-                                             @Param("sortOrder") String sortOrder);
+    List<Novel> selectAllNovelsWithPagination(@Param("req") NovelSearchRequestDTO req);
     
-    long countAllNovels(@Param("categoryId") Integer categoryId,
-                       @Param("status") Integer status,
-                       @Param("search") String search,
-                       @Param("authorId") UUID authorId);
+    long countAllNovels(@Param("req") NovelSearchRequestDTO req);
     
     // Statistics and counter methods
     int incrementViewCount(@Param("novelId") Integer novelId);

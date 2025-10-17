@@ -1,5 +1,36 @@
--- Create novel table for content service
--- This table stores novel information including metadata, statistics, and publishing status
+-- Create all tables for Content Service
+-- This migration creates category and novel tables with all necessary indexes and constraints
+
+-- =============================================
+-- 1. CREATE CATEGORY TABLE
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS category (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default categories
+INSERT INTO category (name, description) VALUES 
+('Fantasy', 'Fantasy novels with magical elements'),
+('Romance', 'Romance novels focusing on love stories'),
+('Mystery', 'Mystery and detective novels'),
+('Sci-Fi', 'Science fiction novels'),
+('Horror', 'Horror and thriller novels'),
+('Adventure', 'Adventure and action novels'),
+('Drama', 'Drama and literary fiction'),
+('Comedy', 'Comedy and humorous novels')
+ON CONFLICT (name) DO NOTHING;
+
+-- Add comments for documentation
+COMMENT ON TABLE category IS 'Novel categories and genres';
+
+-- =============================================
+-- 2. CREATE NOVEL TABLE
+-- =============================================
 
 CREATE TABLE IF NOT EXISTS novel (
     id SERIAL PRIMARY KEY,
@@ -24,14 +55,17 @@ CREATE TABLE IF NOT EXISTS novel (
     publish_time TIMESTAMP,
     
     -- Constraints
-    CONSTRAINT fk_novel_author FOREIGN KEY (author_id) REFERENCES users(uuid),
     CONSTRAINT fk_novel_category FOREIGN KEY (category_id) REFERENCES category(id),
     
     -- Indexes for performance
     CONSTRAINT unique_novel_uuid UNIQUE (uuid)
 );
 
--- Create indexes for better query performance
+-- =============================================
+-- 3. CREATE INDEXES FOR PERFORMANCE
+-- =============================================
+
+-- Novel table indexes
 CREATE INDEX IF NOT EXISTS idx_novel_author_id ON novel(author_id);
 CREATE INDEX IF NOT EXISTS idx_novel_category_id ON novel(category_id);
 CREATE INDEX IF NOT EXISTS idx_novel_status ON novel(status);
@@ -49,12 +83,15 @@ CREATE INDEX IF NOT EXISTS idx_novel_status_category ON novel(status, category_i
 CREATE INDEX IF NOT EXISTS idx_novel_author_status ON novel(author_id, status);
 CREATE INDEX IF NOT EXISTS idx_novel_published_ranking ON novel(status, view_cnt DESC) WHERE status = 2;
 
--- Add comments for documentation
+-- =============================================
+-- 4. ADD COMMENTS FOR DOCUMENTATION
+-- =============================================
+
 COMMENT ON TABLE novel IS 'Stores novel information including metadata, statistics, and publishing status';
 COMMENT ON COLUMN novel.id IS 'Primary key - auto-incrementing integer';
 COMMENT ON COLUMN novel.uuid IS 'Unique identifier for external references';
 COMMENT ON COLUMN novel.title IS 'Title of the novel';
-COMMENT ON COLUMN novel.author_id IS 'Foreign key to users table - author of the novel';
+COMMENT ON COLUMN novel.author_id IS 'Author UUID - managed by User Service';
 COMMENT ON COLUMN novel.author_name IS 'Cached author name for performance';
 COMMENT ON COLUMN novel.category_id IS 'Foreign key to category table - genre/category of the novel';
 COMMENT ON COLUMN novel.synopsis IS 'Short description/summary of the novel';

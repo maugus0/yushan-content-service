@@ -291,18 +291,30 @@
   <!-- Common WHERE clause for filtering -->
   <sql id="Novel_Where">
     <where>
-      <if test="categoryId != null and categoryId > 0">
-        and category_id = #{categoryId,jdbcType=INTEGER}
+      <if test="req.categoryId != null and req.categoryId > 0">
+        and category_id = #{req.categoryId,jdbcType=INTEGER}
       </if>
-      <if test="status != null">
-        and status = #{status,jdbcType=INTEGER}
+      <if test="req.status != null and req.status != ''">
+        and status = (
+          CASE #{req.status}
+            WHEN 'DRAFT' THEN 0
+            WHEN 'UNDER_REVIEW' THEN 1
+            WHEN 'PUBLISHED' THEN 2
+            WHEN 'HIDDEN' THEN 3
+            WHEN 'ARCHIVED' THEN 4
+            ELSE -1
+          END
+        )
       </if>
-      <if test="search != null and search != ''">
-        <bind name="searchPattern" value="'%' + search + '%'" />
+      <if test="req.search != null and req.search != ''">
+        <bind name="searchPattern" value="'%' + req.search + '%'" />
         and (title ILIKE #{searchPattern} or synopsis ILIKE #{searchPattern})
       </if>
-      <if test="authorId != null">
-        and author_id = #{authorId,jdbcType=OTHER}
+      <if test="req.authorId != null and req.authorId != ''">
+        and author_id = #{req.authorId}::uuid
+      </if>
+      <if test="req.isCompleted != null">
+        and is_completed = #{req.isCompleted,jdbcType=BOOLEAN}
       </if>
     </where>
   </sql>
@@ -330,9 +342,9 @@
   <!-- Common ORDER BY clause -->
   <sql id="Novel_Order_By">
     <choose>
-      <when test="sortBy == 'title'">
+      <when test="req.sort == 'title'">
         <choose>
-          <when test="sortOrder == 'asc'">
+          <when test="req.order == 'asc'">
             order by title asc
           </when>
           <otherwise>
@@ -340,9 +352,9 @@
           </otherwise>
         </choose>
       </when>
-      <when test="sortBy == 'updateTime'">
+      <when test="req.sort == 'updateTime'">
         <choose>
-          <when test="sortOrder == 'asc'">
+          <when test="req.order == 'asc'">
             order by update_time asc
           </when>
           <otherwise>
@@ -350,9 +362,9 @@
           </otherwise>
         </choose>
       </when>
-      <when test="sortBy == 'viewCnt'">
+      <when test="req.sort == 'viewCnt'">
         <choose>
-          <when test="sortOrder == 'asc'">
+          <when test="req.order == 'asc'">
             order by view_cnt asc
           </when>
           <otherwise>
@@ -360,9 +372,9 @@
           </otherwise>
         </choose>
       </when>
-      <when test="sortBy == 'avgRating'">
+      <when test="req.sort == 'avgRating'">
         <choose>
-          <when test="sortOrder == 'asc'">
+          <when test="req.order == 'asc'">
             order by avg_rating asc
           </when>
           <otherwise>
@@ -372,7 +384,7 @@
       </when>
       <otherwise>
         <choose>
-          <when test="sortOrder == 'asc'">
+          <when test="req.order == 'asc'">
             order by create_time asc
           </when>
           <otherwise>
@@ -383,22 +395,6 @@
     </choose>
   </sql>
 
-  <!-- Pagination and filtering queries -->
-  <select id="selectNovelsWithPagination" resultMap="BaseResultMap">
-    select 
-    <include refid="Base_Column_List" />
-    from novel
-    <include refid="Novel_Public_Where" />
-    <include refid="Novel_Order_By" />
-    limit #{limit,jdbcType=INTEGER} offset #{offset}
-  </select>
-
-  <select id="countNovels" resultType="long">
-    select count(*)
-    from novel
-    <include refid="Novel_Public_Where" />
-  </select>
-
   <!-- Admin queries - including ARCHIVED novels -->
   <select id="selectAllNovelsWithPagination" resultMap="BaseResultMap">
     select 
@@ -406,7 +402,7 @@
     from novel
     <include refid="Novel_Where" />
     <include refid="Novel_Order_By" />
-    limit #{limit,jdbcType=INTEGER} offset #{offset}
+    limit #{req.size,jdbcType=INTEGER} offset #{req.page,jdbcType=INTEGER} * #{req.size,jdbcType=INTEGER}
   </select>
 
   <select id="countAllNovels" resultType="long">
@@ -571,6 +567,125 @@
     select count(*)
     from novel
     where status = 1  <!-- UNDER_REVIEW status -->
+  </select>
+
+  <select id="selectByAuthor" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where author_id = #{authorId}
+    order by create_time desc
+    limit #{limit} offset #{offset}
+  </select>
+
+  <select id="selectByCategory" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where category_id = #{categoryId}
+    order by create_time desc
+    limit #{limit} offset #{offset}
+  </select>
+
+  <!-- Pagination and filtering methods -->
+  <select id="selectNovelsWithPagination" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    <where>
+      <if test="req.status != null and req.status != ''">
+        AND status = (
+          CASE #{req.status}
+            WHEN 'DRAFT' THEN 0
+            WHEN 'UNDER_REVIEW' THEN 1
+            WHEN 'PUBLISHED' THEN 2
+            WHEN 'HIDDEN' THEN 3
+            WHEN 'ARCHIVED' THEN 4
+            ELSE -1
+          END
+        )
+      </if>
+      <if test="req.isCompleted != null">
+        AND is_completed = #{req.isCompleted}
+      </if>
+      <if test="req.categoryId != null">
+        AND category_id = #{req.categoryId}
+      </if>
+      <if test="req.authorId != null and req.authorId != ''">
+        AND author_id = #{req.authorId}::uuid
+      </if>
+      <if test="req.search != null and req.search != ''">
+        AND (title ILIKE CONCAT('%', #{req.search}, '%') 
+             OR synopsis ILIKE CONCAT('%', #{req.search}, '%')
+             OR author_name ILIKE CONCAT('%', #{req.search}, '%'))
+      </if>
+    </where>
+    <choose>
+      <when test="req.sort == 'title'">
+        ORDER BY title 
+        <if test="req.order == 'desc'">DESC</if>
+        <if test="req.order == 'asc'">ASC</if>
+      </when>
+      <when test="req.sort == 'viewCnt'">
+        ORDER BY view_cnt 
+        <if test="req.order == 'desc'">DESC</if>
+        <if test="req.order == 'asc'">ASC</if>
+      </when>
+      <when test="req.sort == 'voteCnt'">
+        ORDER BY vote_cnt 
+        <if test="req.order == 'desc'">DESC</if>
+        <if test="req.order == 'asc'">ASC</if>
+      </when>
+      <when test="req.sort == 'avgRating'">
+        ORDER BY avg_rating 
+        <if test="req.order == 'desc'">DESC</if>
+        <if test="req.order == 'asc'">ASC</if>
+      </when>
+      <when test="req.sort == 'updateTime'">
+        ORDER BY update_time 
+        <if test="req.order == 'desc'">DESC</if>
+        <if test="req.order == 'asc'">ASC</if>
+      </when>
+      <otherwise>
+        ORDER BY create_time 
+        <if test="req.order == 'desc'">DESC</if>
+        <if test="req.order == 'asc'">ASC</if>
+      </otherwise>
+    </choose>
+    LIMIT #{req.size} OFFSET #{req.page} * #{req.size}
+  </select>
+
+  <select id="countNovels" resultType="long">
+    select count(*)
+    from novel
+    <where>
+      <if test="req.status != null and req.status != ''">
+        AND status = (
+          CASE #{req.status}
+            WHEN 'DRAFT' THEN 0
+            WHEN 'UNDER_REVIEW' THEN 1
+            WHEN 'PUBLISHED' THEN 2
+            WHEN 'HIDDEN' THEN 3
+            WHEN 'ARCHIVED' THEN 4
+            ELSE -1
+          END
+        )
+      </if>
+      <if test="req.isCompleted != null">
+        AND is_completed = #{req.isCompleted}
+      </if>
+      <if test="req.categoryId != null">
+        AND category_id = #{req.categoryId}
+      </if>
+      <if test="req.authorId != null and req.authorId != ''">
+        AND author_id = #{req.authorId}::uuid
+      </if>
+      <if test="req.search != null and req.search != ''">
+        AND (title ILIKE CONCAT('%', #{req.search}, '%') 
+             OR synopsis ILIKE CONCAT('%', #{req.search}, '%')
+             OR author_name ILIKE CONCAT('%', #{req.search}, '%'))
+      </if>
+    </where>
   </select>
 
 </mapper>

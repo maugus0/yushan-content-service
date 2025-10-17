@@ -101,6 +101,12 @@ management:
     tags:
       application: ${spring.application.name}
 
+# JWT Configuration
+jwt:
+  secret: "yushan-content-service-secret-key-for-jwt-token-generation-and-validation-2024"
+  issuer: "yushan-content-service"
+  algorithm: "HS256"
+
 # Logging Configuration
 logging:
   level:

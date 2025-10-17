@@ -1,20 +1,24 @@
-package com.yushan.content_service.dto;
+package com.yushan.content_service.dto.novel;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO for updating an existing novel.
- * All fields are optional for partial updates.
+ * DTO for creating a new novel.
+ * Contains validation annotations for request validation.
  */
-public class NovelUpdateRequestDTO {
+public class NovelCreateRequestDTO {
     
+    @NotBlank(message = "Title must not be blank")
     @Size(max = 255, message = "Title must be at most 255 characters")
     private String title;
 
     @Size(max = 4000, message = "Synopsis must be at most 4000 characters")
     private String synopsis;
 
+    @NotNull(message = "Category ID must not be null")
     private Integer categoryId;
 
     @Pattern(regexp = "^data:image/(jpeg|jpg|png|gif|webp);base64,[A-Za-z0-9+/]+=*$", 
@@ -23,20 +27,17 @@ public class NovelUpdateRequestDTO {
 
     private Boolean isCompleted;
 
-    private String status;  // For admin status changes
-
     // Constructors
-    public NovelUpdateRequestDTO() {
+    public NovelCreateRequestDTO() {
     }
 
-    public NovelUpdateRequestDTO(String title, String synopsis, Integer categoryId, 
-                                String coverImgBase64, Boolean isCompleted, String status) {
+    public NovelCreateRequestDTO(String title, String synopsis, Integer categoryId, 
+                                String coverImgBase64, Boolean isCompleted) {
         this.title = title;
         this.synopsis = synopsis;
         this.categoryId = categoryId;
         this.coverImgBase64 = coverImgBase64;
         this.isCompleted = isCompleted;
-        this.status = status;
     }
 
     // Getters and Setters
@@ -80,23 +81,14 @@ public class NovelUpdateRequestDTO {
         this.isCompleted = isCompleted;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     @Override
     public String toString() {
-        return "NovelUpdateRequestDTO{" +
+        return "NovelCreateRequestDTO{" +
                 "title='" + title + '\'' +
                 ", synopsis='" + synopsis + '\'' +
                 ", categoryId=" + categoryId +
                 ", coverImgBase64='" + (coverImgBase64 != null ? "[BASE64_DATA]" : "null") + '\'' +
                 ", isCompleted=" + isCompleted +
-                ", status='" + status + '\'' +
                 '}';
     }
 }

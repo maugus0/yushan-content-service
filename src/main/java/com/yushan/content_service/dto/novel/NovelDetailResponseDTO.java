@@ -1,4 +1,4 @@
-package com.yushan.content_service.dto;
+package com.yushan.content_service.dto.novel;
 
 import java.util.Date;
 import java.util.UUID;
@@ -16,7 +16,7 @@ public class NovelDetailResponseDTO {
 
     // Author information
     private UUID authorId;
-    private String authorName;
+    private String authorUsername;
 
     // Category information
     private Integer categoryId;
@@ -46,7 +46,7 @@ public class NovelDetailResponseDTO {
     public NovelDetailResponseDTO() {
     }
 
-    public NovelDetailResponseDTO(Integer id, UUID uuid, String title, UUID authorId, String authorName,
+    public NovelDetailResponseDTO(Integer id, UUID uuid, String title, UUID authorId, String authorUsername,
                                  Integer categoryId, String categoryName, String synopsis, String coverImgUrl,
                                  String status, Boolean isCompleted, Integer chapterCnt, Long wordCnt,
                                  Float avgRating, Integer reviewCnt, Long viewCnt, Integer voteCnt,
@@ -55,7 +55,7 @@ public class NovelDetailResponseDTO {
         this.uuid = uuid;
         this.title = title;
         this.authorId = authorId;
-        this.authorName = authorName;
+        this.authorUsername = authorUsername;
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.synopsis = synopsis;
@@ -69,9 +69,9 @@ public class NovelDetailResponseDTO {
         this.viewCnt = viewCnt;
         this.voteCnt = voteCnt;
         this.yuanCnt = yuanCnt;
-        this.createTime = createTime;
-        this.updateTime = updateTime;
-        this.publishTime = publishTime;
+        this.createTime = createTime != null ? new Date(createTime.getTime()) : null;
+        this.updateTime = updateTime != null ? new Date(updateTime.getTime()) : null;
+        this.publishTime = publishTime != null ? new Date(publishTime.getTime()) : null;
     }
 
     // Getters and Setters
@@ -107,12 +107,12 @@ public class NovelDetailResponseDTO {
         this.authorId = authorId;
     }
 
-    public String getAuthorName() {
-        return authorName;
+    public String getAuthorUsername() {
+        return authorUsername;
     }
 
-    public void setAuthorName(String authorName) {
-        this.authorName = authorName;
+    public void setAuthorUsername(String authorUsername) {
+        this.authorUsername = authorUsername;
     }
 
     public Integer getCategoryId() {
@@ -250,7 +250,7 @@ public class NovelDetailResponseDTO {
                 ", uuid=" + uuid +
                 ", title='" + title + '\'' +
                 ", authorId=" + authorId +
-                ", authorName='" + authorName + '\'' +
+                ", authorUsername='" + authorUsername + '\'' +
                 ", categoryId=" + categoryId +
                 ", categoryName='" + categoryName + '\'' +
                 ", status='" + status + '\'' +
