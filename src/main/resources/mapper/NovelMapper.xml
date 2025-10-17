@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yushan.content_service.dao.NovelMapper">
+  
+  <resultMap id="BaseResultMap" type="com.yushan.content_service.entity.Novel">
+    <constructor>
+      <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="uuid" jdbcType="OTHER" javaType="java.util.UUID" />
+      <arg column="title" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="author_id" jdbcType="OTHER" javaType="java.util.UUID" />
+      <arg column="author_name" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="category_id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="synopsis" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="cover_img_url" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="status" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="is_completed" jdbcType="BOOLEAN" javaType="java.lang.Boolean" />
+      <arg column="chapter_cnt" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="word_cnt" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="avg_rating" jdbcType="REAL" javaType="java.lang.Float" />
+      <arg column="review_cnt" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="view_cnt" jdbcType="BIGINT" javaType="java.lang.Long" />
+      <arg column="vote_cnt" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="yuan_cnt" jdbcType="REAL" javaType="java.lang.Float" />
+      <arg column="create_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="publish_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+    </constructor>
+  </resultMap>
+  
+  <sql id="Base_Column_List">
+    id, uuid, title, author_id, author_name, category_id, synopsis, cover_img_url, status, 
+    is_completed, chapter_cnt, word_cnt, avg_rating, review_cnt, view_cnt,
+    vote_cnt, yuan_cnt, create_time, update_time, publish_time
+  </sql>
+  
+  <!-- Basic CRUD operations -->
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <select id="selectByUuid" resultMap="BaseResultMap" parameterType="java.util.UUID">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where uuid = #{uuid,jdbcType=OTHER}
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from novel
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  
+  <insert id="insert" parameterType="com.yushan.content_service.entity.Novel" useGeneratedKeys="true" keyProperty="id">
+    insert into novel (id, uuid, title, 
+      author_id, author_name, category_id, 
+      synopsis, cover_img_url, status, 
+      is_completed, chapter_cnt,
+      word_cnt, avg_rating, review_cnt, 
+      view_cnt, vote_cnt, yuan_cnt, 
+      create_time, update_time, publish_time
+      )
+    values (#{id,jdbcType=INTEGER}, #{uuid,jdbcType=OTHER}, #{title,jdbcType=VARCHAR}, 
+      #{authorId,jdbcType=OTHER}, #{authorName,jdbcType=VARCHAR}, #{categoryId,jdbcType=INTEGER}, 
+      #{synopsis,jdbcType=VARCHAR}, #{coverImgUrl,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
+      #{isCompleted,jdbcType=BOOLEAN}, #{chapterCnt,jdbcType=INTEGER},
+      #{wordCnt,jdbcType=BIGINT}, #{avgRating,jdbcType=REAL}, #{reviewCnt,jdbcType=INTEGER}, 
+      #{viewCnt,jdbcType=BIGINT}, #{voteCnt,jdbcType=INTEGER}, #{yuanCnt,jdbcType=REAL}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, #{publishTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  
+  <insert id="insertSelective" parameterType="com.yushan.content_service.entity.Novel" useGeneratedKeys="true" keyProperty="id">
+    insert into novel
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="uuid != null" >
+        uuid,
+      </if>
+      <if test="title != null" >
+        title,
+      </if>
+      <if test="authorId != null" >
+        author_id,
+      </if>
+      <if test="authorName != null" >
+        author_name,
+      </if>
+      <if test="categoryId != null" >
+        category_id,
+      </if>
+      <if test="synopsis != null" >
+        synopsis,
+      </if>
+      <if test="coverImgUrl != null" >
+        cover_img_url,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+      <if test="isCompleted != null" >
+        is_completed,
+      </if>
+      <if test="chapterCnt != null" >
+        chapter_cnt,
+      </if>
+      <if test="wordCnt != null" >
+        word_cnt,
+      </if>
+      <if test="avgRating != null" >
+        avg_rating,
+      </if>
+      <if test="reviewCnt != null" >
+        review_cnt,
+      </if>
+      <if test="viewCnt != null" >
+        view_cnt,
+      </if>
+      <if test="voteCnt != null" >
+        vote_cnt,
+      </if>
+      <if test="yuanCnt != null" >
+        yuan_cnt,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="updateTime != null" >
+        update_time,
+      </if>
+      <if test="publishTime != null" >
+        publish_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="uuid != null" >
+        #{uuid,jdbcType=OTHER},
+      </if>
+      <if test="title != null" >
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null" >
+        #{authorId,jdbcType=OTHER},
+      </if>
+      <if test="authorName != null" >
+        #{authorName,jdbcType=VARCHAR},
+      </if>
+      <if test="categoryId != null" >
+        #{categoryId,jdbcType=INTEGER},
+      </if>
+      <if test="synopsis != null" >
+        #{synopsis,jdbcType=VARCHAR},
+      </if>
+      <if test="coverImgUrl != null" >
+        #{coverImgUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="isCompleted != null" >
+        #{isCompleted,jdbcType=BOOLEAN},
+      </if>
+      <if test="chapterCnt != null" >
+        #{chapterCnt,jdbcType=INTEGER},
+      </if>
+      <if test="wordCnt != null" >
+        #{wordCnt,jdbcType=BIGINT},
+      </if>
+      <if test="avgRating != null" >
+        #{avgRating,jdbcType=REAL},
+      </if>
+      <if test="reviewCnt != null" >
+        #{reviewCnt,jdbcType=INTEGER},
+      </if>
+      <if test="viewCnt != null" >
+        #{viewCnt,jdbcType=BIGINT},
+      </if>
+      <if test="voteCnt != null" >
+        #{voteCnt,jdbcType=INTEGER},
+      </if>
+      <if test="yuanCnt != null" >
+        #{yuanCnt,jdbcType=REAL},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="publishTime != null" >
+        #{publishTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  
+  <update id="updateByPrimaryKeySelective" parameterType="com.yushan.content_service.entity.Novel">
+    update novel
+    <set>
+      <if test="uuid != null" >
+        uuid = #{uuid,jdbcType=OTHER},
+      </if>
+      <if test="title != null" >
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="authorId != null" >
+        author_id = #{authorId,jdbcType=OTHER},
+      </if>
+      <if test="authorName != null" >
+        author_name = #{authorName,jdbcType=VARCHAR},
+      </if>
+      <if test="categoryId != null" >
+        category_id = #{categoryId,jdbcType=INTEGER},
+      </if>
+      <if test="synopsis != null" >
+        synopsis = #{synopsis,jdbcType=VARCHAR},
+      </if>
+      <if test="coverImgUrl != null" >
+        cover_img_url = #{coverImgUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="isCompleted != null" >
+        is_completed = #{isCompleted,jdbcType=BOOLEAN},
+      </if>
+      <if test="chapterCnt != null" >
+        chapter_cnt = #{chapterCnt,jdbcType=INTEGER},
+      </if>
+      <if test="wordCnt != null" >
+        word_cnt = #{wordCnt,jdbcType=BIGINT},
+      </if>
+      <if test="avgRating != null" >
+        avg_rating = #{avgRating,jdbcType=REAL},
+      </if>
+      <if test="reviewCnt != null" >
+        review_cnt = #{reviewCnt,jdbcType=INTEGER},
+      </if>
+      <if test="viewCnt != null" >
+        view_cnt = #{viewCnt,jdbcType=BIGINT},
+      </if>
+      <if test="voteCnt != null" >
+        vote_cnt = #{voteCnt,jdbcType=INTEGER},
+      </if>
+      <if test="yuanCnt != null" >
+        yuan_cnt = #{yuanCnt,jdbcType=REAL},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="publishTime != null" >
+        publish_time = #{publishTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <update id="updateByPrimaryKey" parameterType="com.yushan.content_service.entity.Novel">
+    update novel
+    set uuid = #{uuid,jdbcType=OTHER},
+      title = #{title,jdbcType=VARCHAR},
+      author_id = #{authorId,jdbcType=OTHER},
+      author_name = #{authorName,jdbcType=VARCHAR},
+      category_id = #{categoryId,jdbcType=INTEGER},
+      synopsis = #{synopsis,jdbcType=VARCHAR},
+      cover_img_url = #{coverImgUrl,jdbcType=VARCHAR},
+      status = #{status,jdbcType=INTEGER},
+      is_completed = #{isCompleted,jdbcType=BOOLEAN},
+      chapter_cnt = #{chapterCnt,jdbcType=INTEGER},
+      word_cnt = #{wordCnt,jdbcType=BIGINT},
+      avg_rating = #{avgRating,jdbcType=REAL},
+      review_cnt = #{reviewCnt,jdbcType=INTEGER},
+      view_cnt = #{viewCnt,jdbcType=BIGINT},
+      vote_cnt = #{voteCnt,jdbcType=INTEGER},
+      yuan_cnt = #{yuanCnt,jdbcType=REAL},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      publish_time = #{publishTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+
+  <!-- Common WHERE clause for filtering -->
+  <sql id="Novel_Where">
+    <where>
+      <if test="categoryId != null and categoryId > 0">
+        and category_id = #{categoryId,jdbcType=INTEGER}
+      </if>
+      <if test="status != null">
+        and status = #{status,jdbcType=INTEGER}
+      </if>
+      <if test="search != null and search != ''">
+        <bind name="searchPattern" value="'%' + search + '%'" />
+        and (title ILIKE #{searchPattern} or synopsis ILIKE #{searchPattern})
+      </if>
+      <if test="authorId != null">
+        and author_id = #{authorId,jdbcType=OTHER}
+      </if>
+    </where>
+  </sql>
+
+  <!-- Public WHERE clause - excludes ARCHIVED novels -->
+  <sql id="Novel_Public_Where">
+    <where>
+      status != 4  <!-- Exclude ARCHIVED novels (NovelStatus.ARCHIVED = 4) -->
+      <if test="categoryId != null and categoryId > 0">
+        and category_id = #{categoryId,jdbcType=INTEGER}
+      </if>
+      <if test="status != null">
+        and status = #{status,jdbcType=INTEGER}
+      </if>
+      <if test="search != null and search != ''">
+        <bind name="searchPattern" value="'%' + search + '%'" />
+        and (title ILIKE #{searchPattern} or synopsis ILIKE #{searchPattern})
+      </if>
+      <if test="authorId != null">
+        and author_id = #{authorId,jdbcType=OTHER}
+      </if>
+    </where>
+  </sql>
+
+  <!-- Common ORDER BY clause -->
+  <sql id="Novel_Order_By">
+    <choose>
+      <when test="sortBy == 'title'">
+        <choose>
+          <when test="sortOrder == 'asc'">
+            order by title asc
+          </when>
+          <otherwise>
+            order by title desc
+          </otherwise>
+        </choose>
+      </when>
+      <when test="sortBy == 'updateTime'">
+        <choose>
+          <when test="sortOrder == 'asc'">
+            order by update_time asc
+          </when>
+          <otherwise>
+            order by update_time desc
+          </otherwise>
+        </choose>
+      </when>
+      <when test="sortBy == 'viewCnt'">
+        <choose>
+          <when test="sortOrder == 'asc'">
+            order by view_cnt asc
+          </when>
+          <otherwise>
+            order by view_cnt desc
+          </otherwise>
+        </choose>
+      </when>
+      <when test="sortBy == 'avgRating'">
+        <choose>
+          <when test="sortOrder == 'asc'">
+            order by avg_rating asc
+          </when>
+          <otherwise>
+            order by avg_rating desc
+          </otherwise>
+        </choose>
+      </when>
+      <otherwise>
+        <choose>
+          <when test="sortOrder == 'asc'">
+            order by create_time asc
+          </when>
+          <otherwise>
+            order by create_time desc
+          </otherwise>
+        </choose>
+      </otherwise>
+    </choose>
+  </sql>
+
+  <!-- Pagination and filtering queries -->
+  <select id="selectNovelsWithPagination" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    <include refid="Novel_Public_Where" />
+    <include refid="Novel_Order_By" />
+    limit #{limit,jdbcType=INTEGER} offset #{offset}
+  </select>
+
+  <select id="countNovels" resultType="long">
+    select count(*)
+    from novel
+    <include refid="Novel_Public_Where" />
+  </select>
+
+  <!-- Admin queries - including ARCHIVED novels -->
+  <select id="selectAllNovelsWithPagination" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    <include refid="Novel_Where" />
+    <include refid="Novel_Order_By" />
+    limit #{limit,jdbcType=INTEGER} offset #{offset}
+  </select>
+
+  <select id="countAllNovels" resultType="long">
+    select count(*)
+    from novel
+    <include refid="Novel_Where" />
+  </select>
+
+  <!-- Statistics and counter methods -->
+  <update id="incrementViewCount">
+    update novel
+    set view_cnt = view_cnt + 1,
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <update id="incrementVoteCount">
+    update novel
+    set vote_cnt = vote_cnt + 1,
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <update id="decrementVoteCount">
+    update novel
+    set vote_cnt = vote_cnt - 1,
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateChapterCount">
+    update novel
+    set chapter_cnt = #{chapterCnt,jdbcType=INTEGER},
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateWordCount">
+    update novel
+    set word_cnt = #{wordCnt,jdbcType=BIGINT},
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateRating">
+    update novel
+    set avg_rating = #{avgRating,jdbcType=REAL},
+        review_cnt = #{reviewCnt,jdbcType=INTEGER},
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <!-- Status update methods -->
+  <update id="updateStatus">
+    update novel
+    set status = #{status,jdbcType=INTEGER},
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updatePublishTime">
+    update novel
+    set publish_time = #{publishTime,jdbcType=TIMESTAMP},
+        update_time = CURRENT_TIMESTAMP
+    where id = #{novelId,jdbcType=INTEGER}
+  </update>
+
+  <!-- Ranking and search methods -->
+  <select id="selectNovelsByRanking" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM novel
+    <where>
+      status = 2  <!-- Include only PUBLISHED novels (NovelStatus.PUBLISHED = 2) -->
+      <if test="categoryId != null and categoryId > 0">
+        AND category_id = #{categoryId,jdbcType=INTEGER}
+      </if>
+    </where>
+    <choose>
+      <when test="sortType == 'view'">
+        ORDER BY view_cnt DESC
+      </when>
+      <when test="sortType == 'vote'">
+        ORDER BY vote_cnt DESC
+      </when>
+      <otherwise>
+        ORDER BY view_cnt DESC
+      </otherwise>
+    </choose>
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countNovelsByRanking" resultType="long">
+    SELECT COUNT(*)
+    FROM novel
+    <where>
+      status = 2  <!-- Include only PUBLISHED novels (NovelStatus.PUBLISHED = 2) -->
+      <if test="categoryId != null and categoryId > 0">
+        AND category_id = #{categoryId,jdbcType=INTEGER}
+      </if>
+    </where>
+  </select>
+
+  <!-- Additional query methods -->
+  <select id="selectByAuthorId" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where author_id = #{authorId,jdbcType=OTHER}
+    order by create_time desc
+  </select>
+
+  <select id="selectByCategoryId" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where category_id = #{categoryId,jdbcType=INTEGER}
+    and status != 4  <!-- Exclude ARCHIVED novels -->
+    order by create_time desc
+  </select>
+
+  <select id="selectByStatus" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where status = #{status,jdbcType=INTEGER}
+    order by create_time desc
+  </select>
+
+  <!-- Batch operations -->
+  <select id="selectByIds" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from novel
+    where id IN
+    <foreach item="id" collection="ids" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </select>
+
+  <select id="selectByUuids" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from novel
+    where uuid IN
+    <foreach item="uuid" collection="uuids" open="(" separator="," close=")">
+      #{uuid,jdbcType=OTHER}
+    </foreach>
+  </select>
+
+  <!-- Statistics for admin dashboard -->
+  <select id="selectNovelsUnderReview" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from novel
+    where status = 1  <!-- UNDER_REVIEW status -->
+    order by create_time desc
+    limit #{limit} offset #{offset}
+  </select>
+
+  <select id="countNovelsUnderReview" resultType="long">
+    select count(*)
+    from novel
+    where status = 1  <!-- UNDER_REVIEW status -->
+  </select>
+
+</mapper>

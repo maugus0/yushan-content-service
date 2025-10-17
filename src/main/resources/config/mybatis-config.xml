@@ -6,4 +6,9 @@
         <setting name="cacheEnabled" value="true"/>
         <setting name="logImpl" value="org.apache.ibatis.logging.stdout.StdOutImpl"/>
     </settings>
+
+    <typeHandlers>
+        <!-- Register UUID type handler -->
+        <typeHandler handler="com.yushan.content_service.config.UUIDTypeHandler"/>
+    </typeHandlers>
 </configuration>
