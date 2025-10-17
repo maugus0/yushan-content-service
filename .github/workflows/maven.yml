@@ -38,7 +38,7 @@ jobs:
         cache: maven
         
     - name: Run Unit Tests
-      run: ./mvnw test -Dtest='!**/integration/**,!**/IntegrationTest' -Dspring.profiles.active=test
+      run: ./mvnw test -Dtest='!**/integration/**' -Dspring.profiles.active=test
 
   integration-tests:
     name: Integration Tests
@@ -58,7 +58,7 @@ jobs:
         cache: maven
         
     - name: Run Integration Tests
-      run: ./mvnw test -Dtest='**/integration/**,**/IntegrationTest' -Dspring.profiles.active=integration-test
+      run: ./mvnw test -Dtest='**/integration/**' -Dspring.profiles.active=integration-test
       env:
         CI: true
 
