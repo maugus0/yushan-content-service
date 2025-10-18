@@ -120,10 +120,11 @@ public class NovelIntegrationTest {
                 .andExpect(jsonPath("$.data.title").value("Integration Test Novel"))
                 .andExpect(jsonPath("$.data.status").value("DRAFT"));
 
-        // Assert - Verify data was persisted
+        // Assert - Verify data was persisted by searching for the specific novel
         NovelSearchRequestDTO searchRequest = new NovelSearchRequestDTO();
         searchRequest.setPage(0);
-        searchRequest.setSize(10);
+        searchRequest.setSize(100); // Get more results to find our novel
+        searchRequest.setSearch("Integration Test Novel"); // Search by title
         List<Novel> novels = novelMapper.selectNovelsWithPagination(searchRequest);
         assertThat(novels).hasSize(1);
         assertThat(novels.get(0).getTitle()).isEqualTo("Integration Test Novel");
@@ -134,15 +135,16 @@ public class NovelIntegrationTest {
     @Test
     void getNovels_ShouldReturnFromDatabase() throws Exception {
         // Arrange - Insert test data directly
-        Novel novel1 = createTestNovel("Novel 1");
-        Novel novel2 = createTestNovel("Novel 2");
+        Novel novel1 = createTestNovel("Test Novel 1");
+        Novel novel2 = createTestNovel("Test Novel 2");
         novelMapper.insertSelective(novel1);
         novelMapper.insertSelective(novel2);
 
-        // Act & Assert
+        // Act & Assert - Search for our specific test novels
         mockMvc.perform(get("/api/v1/novels")
                 .param("page", "0")
-                .param("size", "10"))
+                .param("size", "100")
+                .param("search", "Test Novel")) // Search for our test novels
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -217,19 +219,20 @@ public class NovelIntegrationTest {
     @Test
     void getAllNovelsAdmin_ShouldReturnAllNovelsIncludingArchived() throws Exception {
         // Arrange - Insert novels with different statuses
-        Novel publishedNovel = createTestNovel("Published Novel");
+        Novel publishedNovel = createTestNovel("Admin Test Published Novel");
         publishedNovel.setStatus(2); // PUBLISHED
         novelMapper.insertSelective(publishedNovel);
 
-        Novel archivedNovel = createTestNovel("Archived Novel");
+        Novel archivedNovel = createTestNovel("Admin Test Archived Novel");
         archivedNovel.setStatus(4); // ARCHIVED
         novelMapper.insertSelective(archivedNovel);
 
-        // Act & Assert
+        // Act & Assert - Search for our specific test novels
         mockMvc.perform(get("/api/v1/novels/admin/all")
                 .header("Authorization", "Bearer " + adminToken)
                 .param("page", "0")
-                .param("size", "10"))
+                .param("size", "100")
+                .param("search", "Admin Test")) // Search for our test novels
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
@@ -256,26 +259,27 @@ public class NovelIntegrationTest {
     @Test
     void searchNovels_WithFilters_ShouldReturnFilteredResults() throws Exception {
         // Arrange
-        Novel fantasyNovel = createTestNovel("Fantasy Novel");
+        Novel fantasyNovel = createTestNovel("Search Test Fantasy Novel");
         fantasyNovel.setCategoryId(1); // Fantasy
         fantasyNovel.setStatus(2); // PUBLISHED
         novelMapper.insertSelective(fantasyNovel);
 
-        Novel romanceNovel = createTestNovel("Romance Novel");
+        Novel romanceNovel = createTestNovel("Search Test Romance Novel");
         romanceNovel.setCategoryId(2); // Romance
         romanceNovel.setStatus(2); // PUBLISHED
         novelMapper.insertSelective(romanceNovel);
 
-        // Act & Assert - Search by category
+        // Act & Assert - Search by category and search filter
         mockMvc.perform(get("/api/v1/novels")
-                .param("categoryId", "1")
+                .param("category", "1")  // Use correct parameter name
                 .param("status", "PUBLISHED")
+                .param("search", "Search Test") // Filter by our test novels
                 .param("page", "0")
                 .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.content[0].title").value("Romance Novel"));
+                .andExpect(jsonPath("$.data.totalElements").value(1)) // Only fantasy novel matches categoryId=1
+                .andExpect(jsonPath("$.data.content[0].title").value("Search Test Fantasy Novel"));
     }
 
     private Novel createTestNovel(String title) {

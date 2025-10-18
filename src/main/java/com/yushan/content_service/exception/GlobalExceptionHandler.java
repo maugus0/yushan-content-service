@@ -110,6 +110,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle illegal argument exceptions
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        ApiResponse<Object> errorResponse = ApiResponse.error(
+            ErrorCode.BAD_REQUEST,
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    /**
      * handle general exception
      */
     @ExceptionHandler(Exception.class)
