@@ -143,12 +143,14 @@ public class NovelService {
             throw new ResourceNotFoundException("novel not found");
         }
 
-        // Check if novel can be edited - allow DRAFT, PUBLISHED, and HIDDEN novels to be edited
+        // Check if novel can be edited - allow DRAFT, PUBLISHED, HIDDEN, and UNDER_REVIEW novels to be edited
+        // Note: UNDER_REVIEW novels can only be edited by ADMIN (authorization is handled by NovelGuard)
         int currentStatus = existing.getStatus();
         if (currentStatus != NovelStatus.DRAFT.getValue() && 
             currentStatus != NovelStatus.PUBLISHED.getValue() && 
-            currentStatus != NovelStatus.HIDDEN.getValue()) {
-            throw new IllegalArgumentException("only draft, published, or hidden novels can be edited");
+            currentStatus != NovelStatus.HIDDEN.getValue() &&
+            currentStatus != NovelStatus.UNDER_REVIEW.getValue()) {
+            throw new IllegalArgumentException("only draft, published, hidden, or under review novels can be edited");
         }
 
         boolean changeOtherFieldsNotIsCompleted = false;

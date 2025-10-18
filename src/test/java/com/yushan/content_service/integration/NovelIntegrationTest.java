@@ -140,6 +140,8 @@ public class NovelIntegrationTest {
     void updateNovel_ShouldUpdateInDatabase() throws Exception {
         // Arrange
         Novel novel = createTestNovel("Original Title");
+        // Use the same userId as in the JWT token
+        novel.setAuthorId(UUID.fromString("550e8400-e29b-41d4-a716-446655440001"));
         novelMapper.insertSelective(novel);
 
         Map<String, Object> updateRequest = new HashMap<>();
