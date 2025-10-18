@@ -315,7 +315,7 @@ public class NovelController {
      * GET /api/v1/novels/count
      */
     @GetMapping("/count")
-    @Operation(summary = "[PUBLIC] Get novel count", description = "Gets the total count of novels with optional filtering.")
+    @Operation(summary = "[PUBLIC] Get novel count (excludes ARCHIVED)", description = "Gets the total count of novels with optional filtering. Excludes ARCHIVED novels from count.")
     public ApiResponse<Long> getNovelCount(
             @RequestParam(value = "category", required = false) Integer categoryId,
             @RequestParam(value = "status", required = false) String status,

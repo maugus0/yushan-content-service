@@ -593,9 +593,10 @@
     <include refid="Base_Column_List" />
     from novel
     <where>
+      status != 4  <!-- Exclude ARCHIVED novels (NovelStatus.ARCHIVED = 4) -->
       <if test="req.status != null and req.status != ''">
         AND status = (
-          CASE #{req.status}
+          CASE UPPER(#{req.status})
             WHEN 'DRAFT' THEN 0
             WHEN 'UNDER_REVIEW' THEN 1
             WHEN 'PUBLISHED' THEN 2
@@ -659,9 +660,10 @@
     select count(*)
     from novel
     <where>
+      status != 4  <!-- Exclude ARCHIVED novels (NovelStatus.ARCHIVED = 4) -->
       <if test="req.status != null and req.status != ''">
         AND status = (
-          CASE #{req.status}
+          CASE UPPER(#{req.status})
             WHEN 'DRAFT' THEN 0
             WHEN 'UNDER_REVIEW' THEN 1
             WHEN 'PUBLISHED' THEN 2
