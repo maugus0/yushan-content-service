@@ -23,12 +23,14 @@ public class RedisUtil {
     private static final String VIEW_COUNT_PREFIX = "view_count:";
     private static final String POPULAR_PREFIX = "popular:";
     private static final String SEARCH_PREFIX = "search:";
+    private static final String CATEGORY_PREFIX = "category:";
 
     // Cache TTL constants
     private static final Duration NOVEL_CACHE_TTL = Duration.ofHours(1);
     private static final Duration VIEW_COUNT_CACHE_TTL = Duration.ofMinutes(30);
     private static final Duration POPULAR_CACHE_TTL = Duration.ofMinutes(15);
     private static final Duration SEARCH_CACHE_TTL = Duration.ofMinutes(10);
+    private static final Duration CATEGORY_CACHE_TTL = Duration.ofMinutes(30);
 
     /**
      * Set a key-value pair with TTL
@@ -257,6 +259,90 @@ public class RedisUtil {
         Set<String> allKeys = keys("*");
         if (!allKeys.isEmpty()) {
             delete(allKeys);
+        }
+    }
+
+    // Category-specific cache methods
+
+    /**
+     * Cache category data
+     */
+    public void cacheCategory(Integer categoryId, Object categoryData) {
+        String key = CATEGORY_PREFIX + "id:" + categoryId;
+        set(key, categoryData, CATEGORY_CACHE_TTL);
+    }
+
+    /**
+     * Get cached category data
+     */
+    public Object getCachedCategory(Integer categoryId) {
+        String key = CATEGORY_PREFIX + "id:" + categoryId;
+        return get(key);
+    }
+
+    /**
+     * Get cached category data with type casting
+     */
+    public <T> T getCachedCategory(Integer categoryId, Class<T> clazz) {
+        String key = CATEGORY_PREFIX + "id:" + categoryId;
+        return get(key, clazz);
+    }
+
+    /**
+     * Cache category by slug
+     */
+    public void cacheCategoryBySlug(String slug, Object categoryData) {
+        String key = CATEGORY_PREFIX + "slug:" + slug;
+        set(key, categoryData, CATEGORY_CACHE_TTL);
+    }
+
+    /**
+     * Get cached category by slug
+     */
+    public Object getCachedCategoryBySlug(String slug) {
+        String key = CATEGORY_PREFIX + "slug:" + slug;
+        return get(key);
+    }
+
+    /**
+     * Get cached category by slug with type casting
+     */
+    public <T> T getCachedCategoryBySlug(String slug, Class<T> clazz) {
+        String key = CATEGORY_PREFIX + "slug:" + slug;
+        return get(key, clazz);
+    }
+
+    /**
+     * Cache categories list
+     */
+    public void cacheCategories(String type, Object categoriesData) {
+        String key = CATEGORY_PREFIX + type;
+        set(key, categoriesData, CATEGORY_CACHE_TTL);
+    }
+
+    /**
+     * Get cached categories list
+     */
+    public Object getCachedCategories(String type) {
+        String key = CATEGORY_PREFIX + type;
+        return get(key);
+    }
+
+    /**
+     * Get cached categories list with type casting
+     */
+    public <T> T getCachedCategories(String type, Class<T> clazz) {
+        String key = CATEGORY_PREFIX + type;
+        return get(key, clazz);
+    }
+
+    /**
+     * Invalidate all category-related caches
+     */
+    public void invalidateCategoryCaches() {
+        Set<String> categoryKeys = keys(CATEGORY_PREFIX + "*");
+        if (!categoryKeys.isEmpty()) {
+            delete(categoryKeys);
         }
     }
 }

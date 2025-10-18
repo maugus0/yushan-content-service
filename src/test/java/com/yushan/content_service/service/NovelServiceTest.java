@@ -30,6 +30,7 @@ public class NovelServiceTest {
     private NovelMapper novelMapper;
     private RedisUtil redisUtil;
     private KafkaEventProducerService kafkaEventProducerService;
+    private CategoryService categoryService;
     private NovelService novelService;
 
     @BeforeEach
@@ -37,6 +38,7 @@ public class NovelServiceTest {
         novelMapper = Mockito.mock(NovelMapper.class);
         redisUtil = Mockito.mock(RedisUtil.class);
         kafkaEventProducerService = Mockito.mock(KafkaEventProducerService.class);
+        categoryService = Mockito.mock(CategoryService.class);
 
         novelService = new NovelService();
         try {
@@ -51,6 +53,10 @@ public class NovelServiceTest {
             java.lang.reflect.Field f3 = NovelService.class.getDeclaredField("kafkaEventProducerService");
             f3.setAccessible(true);
             f3.set(novelService, kafkaEventProducerService);
+            
+            java.lang.reflect.Field f4 = NovelService.class.getDeclaredField("categoryService");
+            f4.setAccessible(true);
+            f4.set(novelService, categoryService);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -84,6 +90,13 @@ public class NovelServiceTest {
             return 1;
         });
         when(novelMapper.selectByPrimaryKey(1)).thenReturn(savedNovel);
+        
+        // Mock CategoryService
+        com.yushan.content_service.entity.Category mockCategory = new com.yushan.content_service.entity.Category();
+        mockCategory.setId(1);
+        mockCategory.setName("Test Category");
+        mockCategory.setIsActive(true);
+        when(categoryService.getCategoryById(1)).thenReturn(mockCategory);
 
         // Act
         NovelDetailResponseDTO result = novelService.createNovel(authorId, authorName, request);
@@ -154,6 +167,13 @@ public class NovelServiceTest {
 
         when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(existingNovel);
         when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        
+        // Mock CategoryService
+        com.yushan.content_service.entity.Category mockCategory = new com.yushan.content_service.entity.Category();
+        mockCategory.setId(2);
+        mockCategory.setName("Updated Category");
+        mockCategory.setIsActive(true);
+        when(categoryService.getCategoryById(2)).thenReturn(mockCategory);
 
         // Act
         NovelDetailResponseDTO result = novelService.updateNovel(novelId, request);
@@ -286,6 +306,9 @@ public class NovelServiceTest {
 
         when(novelMapper.selectNovelsWithPagination(any())).thenReturn(novels);
         when(novelMapper.countNovels(any())).thenReturn(2L);
+        
+        // Mock CategoryService for batch loading
+        when(categoryService.getCategoryMapByIds(any())).thenReturn(java.util.Map.of(1, "Test Category"));
 
         // Act
         PageResponseDTO<NovelDetailResponseDTO> result = novelService.listNovelsWithPagination(request);

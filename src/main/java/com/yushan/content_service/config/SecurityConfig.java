@@ -71,8 +71,15 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/static/**").permitAll()
                 
+                // CORS preflight requests - allow OPTIONS for all endpoints
+                .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+                
+                // Category APIs - public read, admin write (following yushan-backend pattern)
+                .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                .requestMatchers("/api/v1/categories/**").hasRole("ADMIN")
+                
                 // Novel APIs - following yushan-backend pattern
-                .requestMatchers(HttpMethod.POST, "/api/v1/novels").authenticated()  // Create novel
+                .requestMatchers(HttpMethod.POST, "/api/v1/novels").hasAnyRole("AUTHOR","ADMIN")  // Create novel
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels").permitAll()      // List novels
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/*").permitAll()    // Get novel by ID
                 .requestMatchers(HttpMethod.PUT, "/api/v1/novels/*").authenticated() // Update novel
@@ -86,7 +93,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/author/**").permitAll() // Get by author
                 
                 // Admin endpoints - require admin role
-                .requestMatchers("/api/v1/novels/admin/**").authenticated()
+                .requestMatchers("/api/v1/novels/admin/**").hasRole("ADMIN")
                 
                 // All other requests require authentication
                 .anyRequest().authenticated()

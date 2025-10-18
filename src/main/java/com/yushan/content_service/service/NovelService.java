@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,9 @@ public class NovelService {
     @Autowired
     private FileStorageService fileStorageService;
 
+    @Autowired
+    private CategoryService categoryService;
+
     /**
      * Create a new novel
      */
@@ -48,8 +52,11 @@ public class NovelService {
             throw new IllegalArgumentException("category not found");
         }
         
-        // TODO: Validate category exists when CategoryService is ready
-        // For now, we'll assume category validation is handled by the caller
+        // Validate category exists and get category name
+        com.yushan.content_service.entity.Category category = categoryService.getCategoryById(request.getCategoryId());
+        if (category == null || !category.getIsActive()) {
+            throw new IllegalArgumentException("category not found or inactive");
+        }
         
         Novel novel = new Novel();
         novel.setUuid(UUID.randomUUID());
@@ -172,7 +179,12 @@ public class NovelService {
             }
         }
         if (request.getCategoryId() != null && request.getCategoryId() > 0) {
-            // TODO: Validate category exists when CategoryService is ready
+            // Validate category exists and get category name
+            com.yushan.content_service.entity.Category category = categoryService.getCategoryById(request.getCategoryId());
+            if (category == null || !category.getIsActive()) {
+                throw new IllegalArgumentException("category not found or inactive");
+            }
+            
             if (!request.getCategoryId().equals(existing.getCategoryId())) {
                 existing.setCategoryId(request.getCategoryId());
                 updatedFields.add("categoryId");
@@ -377,10 +389,8 @@ public class NovelService {
             ? novelMapper.countAllNovels(request)
             : novelMapper.countNovels(request);
         
-        // Convert to DTOs
-        List<NovelDetailResponseDTO> novelDTOs = novels.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        // Convert to DTOs using batch loading to avoid N+1 problem
+        List<NovelDetailResponseDTO> novelDTOs = toResponseList(novels);
         return new PageResponseDTO<>(novelDTOs, totalElements, request.getPage(), request.getSize());
     }
 
@@ -394,9 +404,7 @@ public class NovelService {
         request.setSize(100); // Get all novels by author
         
         List<Novel> novels = novelMapper.selectNovelsWithPagination(request);
-        return novels.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        return toResponseList(novels);
     }
 
     /**
@@ -409,9 +417,7 @@ public class NovelService {
         request.setSize(100); // Get all novels by category
         
         List<Novel> novels = novelMapper.selectNovelsWithPagination(request);
-        return novels.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        return toResponseList(novels);
     }
 
     /**
@@ -557,8 +563,13 @@ public class NovelService {
         dto.setAuthorId(novel.getAuthorId());
         dto.setAuthorUsername(novel.getAuthorName());
         dto.setCategoryId(novel.getCategoryId());
-        // TODO: Set category name when CategoryService is ready
-        dto.setCategoryName(null);
+        // Get category name from CategoryService with caching
+        try {
+            com.yushan.content_service.entity.Category category = categoryService.getCategoryById(novel.getCategoryId());
+            dto.setCategoryName(category.getName());
+        } catch (Exception e) {
+            dto.setCategoryName(null); // Fallback if category not found
+        }
         dto.setSynopsis(novel.getSynopsis());
         dto.setCoverImgUrl(novel.getCoverImgUrl());
         dto.setStatus(reverseStatus(novel.getStatus()));
@@ -574,6 +585,54 @@ public class NovelService {
         dto.setCreateTime(novel.getCreateTime());
         dto.setUpdateTime(novel.getUpdateTime());
         return dto;
+    }
+
+    /**
+     * Convert list of Novel entities to NovelDetailResponseDTO with batch category loading
+     * This method optimizes category loading to avoid N+1 query problem
+     */
+    private List<NovelDetailResponseDTO> toResponseList(List<Novel> novels) {
+        if (novels == null || novels.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Batch load all category IDs
+        List<Integer> categoryIds = novels.stream()
+                .map(Novel::getCategoryId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Get all categories at once
+        Map<Integer, String> categoryMap = categoryService.getCategoryMapByIds(categoryIds);
+
+        // Convert novels to DTOs using the category map
+        return novels.stream()
+                .map(novel -> {
+                    NovelDetailResponseDTO dto = new NovelDetailResponseDTO();
+                    dto.setId(novel.getId());
+                    dto.setUuid(novel.getUuid());
+                    dto.setTitle(novel.getTitle());
+                    dto.setAuthorId(novel.getAuthorId());
+                    dto.setAuthorUsername(novel.getAuthorName());
+                    dto.setCategoryId(novel.getCategoryId());
+                    dto.setCategoryName(categoryMap.get(novel.getCategoryId())); // Use cached category name
+                    dto.setSynopsis(novel.getSynopsis());
+                    dto.setCoverImgUrl(novel.getCoverImgUrl());
+                    dto.setStatus(reverseStatus(novel.getStatus()));
+                    dto.setIsCompleted(novel.getIsCompleted());
+                    dto.setChapterCnt(novel.getChapterCnt());
+                    dto.setWordCnt(novel.getWordCnt());
+                    dto.setAvgRating(novel.getAvgRating());
+                    dto.setReviewCnt(novel.getReviewCnt());
+                    dto.setViewCnt(novel.getViewCnt());
+                    dto.setVoteCnt(novel.getVoteCnt());
+                    dto.setYuanCnt(novel.getYuanCnt());
+                    dto.setPublishTime(novel.getPublishTime());
+                    dto.setCreateTime(novel.getCreateTime());
+                    dto.setUpdateTime(novel.getUpdateTime());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     /**

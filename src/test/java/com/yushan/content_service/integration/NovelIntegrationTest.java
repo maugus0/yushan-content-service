@@ -5,11 +5,13 @@ import com.yushan.content_service.TestcontainersConfiguration;
 import com.yushan.content_service.dao.NovelMapper;
 import com.yushan.content_service.dto.novel.NovelSearchRequestDTO;
 import com.yushan.content_service.entity.Novel;
+import com.yushan.content_service.service.KafkaEventProducerService;
 import com.yushan.content_service.util.JwtTestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -27,6 +29,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -47,6 +51,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "CI", matches = "true")
 public class NovelIntegrationTest {
+
+    @MockBean
+    private KafkaEventProducerService kafkaEventProducerService;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -79,6 +86,12 @@ public class NovelIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Mock Kafka events to prevent connection issues
+        doNothing().when(kafkaEventProducerService).publishNovelCreatedEvent(any(), any());
+        doNothing().when(kafkaEventProducerService).publishNovelUpdatedEvent(any(), any(), any());
+        doNothing().when(kafkaEventProducerService).publishNovelStatusChangedEvent(any(), any(), any(), any(), any());
+        doNothing().when(kafkaEventProducerService).publishNovelViewEvent(any(), any(), any(), any(), any());
+        
         mockMvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(springSecurity())

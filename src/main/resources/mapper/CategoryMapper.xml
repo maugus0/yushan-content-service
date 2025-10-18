@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yushan.content_service.dao.CategoryMapper" >
+    
+    <resultMap id="BaseResultMap" type="com.yushan.content_service.entity.Category" >
+        <constructor >
+            <idArg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+            <arg column="name" jdbcType="VARCHAR" javaType="java.lang.String" />
+            <arg column="description" jdbcType="VARCHAR" javaType="java.lang.String" />
+            <arg column="slug" jdbcType="VARCHAR" javaType="java.lang.String" />
+            <arg column="is_active" jdbcType="BIT" javaType="java.lang.Boolean" />
+            <arg column="create_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+            <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+        </constructor>
+    </resultMap>
+    
+    <sql id="Base_Column_List" >
+        id, name, description, slug, is_active, create_time, update_time
+    </sql>
+    
+    <!-- Select by Primary Key -->
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+        select
+        <include refid="Base_Column_List" />
+        from category
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    
+    <!-- Delete by Primary Key -->
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+        delete from category
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    
+    <!-- Insert -->
+    <insert id="insert" parameterType="com.yushan.content_service.entity.Category" >
+        insert into category (id, name, description,
+        slug, is_active, create_time,
+        update_time)
+        values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR},
+        #{slug,jdbcType=VARCHAR}, #{isActive,jdbcType=BIT}, #{createTime,jdbcType=TIMESTAMP},
+        #{updateTime,jdbcType=TIMESTAMP})
+    </insert>
+    
+    <!-- Insert Selective -->
+    <insert id="insertSelective" parameterType="com.yushan.content_service.entity.Category" >
+        insert into category
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                id,
+            </if>
+            <if test="name != null" >
+                name,
+            </if>
+            <if test="description != null" >
+                description,
+            </if>
+            <if test="slug != null" >
+                slug,
+            </if>
+            <if test="isActive != null" >
+                is_active,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            <if test="updateTime != null" >
+                update_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="name != null" >
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null" >
+                #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="slug != null" >
+                #{slug,jdbcType=VARCHAR},
+            </if>
+            <if test="isActive != null" >
+                #{isActive,jdbcType=BIT},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null" >
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+    
+    <!-- Update by Primary Key Selective -->
+    <update id="updateByPrimaryKeySelective" parameterType="com.yushan.content_service.entity.Category" >
+        update category
+        <set >
+            <if test="name != null" >
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="description != null" >
+                description = #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="slug != null" >
+                slug = #{slug,jdbcType=VARCHAR},
+            </if>
+            <if test="isActive != null" >
+                is_active = #{isActive,jdbcType=BIT},
+            </if>
+            <if test="createTime != null" >
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null" >
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    
+    <!-- Update by Primary Key -->
+    <update id="updateByPrimaryKey" parameterType="com.yushan.content_service.entity.Category" >
+        update category
+        set name = #{name,jdbcType=VARCHAR},
+        description = #{description,jdbcType=VARCHAR},
+        slug = #{slug,jdbcType=VARCHAR},
+        is_active = #{isActive,jdbcType=BIT},
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+        update_time = #{updateTime,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    
+    <!-- Select All Categories -->
+    <select id="selectAll" resultMap="BaseResultMap" >
+        select
+        <include refid="Base_Column_List" />
+        from category
+        order by create_time desc
+    </select>
+    
+    <!-- Select Active Categories Only -->
+    <select id="selectActiveCategories" resultMap="BaseResultMap" >
+        select
+        <include refid="Base_Column_List" />
+        from category
+        where is_active = true
+        order by name asc
+    </select>
+    
+    <!-- Select by Slug -->
+    <select id="selectBySlug" resultMap="BaseResultMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from category
+        where slug = #{slug,jdbcType=VARCHAR}
+    </select>
+    
+    <!-- Select by IDs -->
+    <select id="selectByIds" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from category
+        where id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    
+    <!-- Select by Name -->
+    <select id="selectByName" resultMap="BaseResultMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from category
+        where LOWER(name) = LOWER(#{name,jdbcType=VARCHAR})
+    </select>
+    
+    <!-- Select by Name Excluding ID -->
+    <select id="selectByNameExcludingId" resultMap="BaseResultMap" >
+        select
+        <include refid="Base_Column_List" />
+        from category
+        where LOWER(name) = LOWER(#{name,jdbcType=VARCHAR})
+        and id != #{excludeId,jdbcType=INTEGER}
+    </select>
+    
+    <!-- Select by Slug Excluding ID -->
+    <select id="selectBySlugExcludingId" resultMap="BaseResultMap" >
+        select
+        <include refid="Base_Column_List" />
+        from category
+        where slug = #{slug,jdbcType=VARCHAR}
+        and id != #{excludeId,jdbcType=INTEGER}
+    </select>
+    
+    <!-- Count Novels by Category -->
+    <select id="countNovelsByCategory" resultType="int" parameterType="java.lang.Integer" >
+        select count(*)
+        from novel
+        where category_id = #{categoryId,jdbcType=INTEGER}
+    </select>
+    
+    <!-- Count Active Novels by Category -->
+    <select id="countActiveNovelsByCategory" resultType="int" parameterType="java.lang.Integer" >
+        select count(*)
+        from novel
+        where category_id = #{categoryId,jdbcType=INTEGER}
+        and status != 4
+    </select>
+
+</mapper>
