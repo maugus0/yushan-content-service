@@ -9,6 +9,7 @@ import com.yushan.content_service.dto.common.PageResponseDTO;
 import com.yushan.content_service.entity.Novel;
 import com.yushan.content_service.enums.NovelStatus;
 import com.yushan.content_service.exception.ResourceNotFoundException;
+import com.yushan.content_service.util.RedisUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,17 +28,23 @@ import static org.mockito.Mockito.*;
 public class NovelServiceTest {
 
     private NovelMapper novelMapper;
+    private RedisUtil redisUtil;
     private NovelService novelService;
 
     @BeforeEach
     void setUp() {
         novelMapper = Mockito.mock(NovelMapper.class);
+        redisUtil = Mockito.mock(RedisUtil.class);
 
         novelService = new NovelService();
         try {
             java.lang.reflect.Field f1 = NovelService.class.getDeclaredField("novelMapper");
             f1.setAccessible(true);
             f1.set(novelService, novelMapper);
+            
+            java.lang.reflect.Field f2 = NovelService.class.getDeclaredField("redisUtil");
+            f2.setAccessible(true);
+            f2.set(novelService, redisUtil);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

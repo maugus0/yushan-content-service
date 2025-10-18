@@ -144,7 +144,7 @@ public class NovelController {
      * GET /api/v1/novels
      */
     @GetMapping
-    @Operation(summary = "[PUBLIC] Get novels with pagination", description = "Retrieves a paginated list of novels with optional filtering.")
+    @Operation(summary = "[PUBLIC] Get novels with pagination (excludes ARCHIVED)", description = "Retrieves a paginated list of novels with optional filtering. Excludes ARCHIVED novels from results.")
     public ApiResponse<PageResponseDTO<NovelDetailResponseDTO>> listNovels(
             @Parameter(description = "Page number (0-based)") @RequestParam(value = "page", defaultValue = "0") Integer page,
             @Parameter(description = "Page size") @RequestParam(value = "size", defaultValue = "10") Integer size,
@@ -171,7 +171,7 @@ public class NovelController {
      */
     @GetMapping("/admin/all")
     @PreAuthorize("isAdmin()")
-    @Operation(summary = "[ADMIN] Get all novels", description = "Retrieves all novels including hidden/archived ones.")
+    @Operation(summary = "[ADMIN] Get all novels (includes ARCHIVED)", description = "Retrieves all novels including hidden/archived ones.")
     public ApiResponse<PageResponseDTO<NovelDetailResponseDTO>> getAllNovelsAdmin(
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size,

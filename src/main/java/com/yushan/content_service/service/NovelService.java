@@ -9,6 +9,7 @@ import com.yushan.content_service.dto.novel.NovelUpdateRequestDTO;
 import com.yushan.content_service.entity.Novel;
 import com.yushan.content_service.enums.NovelStatus;
 import com.yushan.content_service.exception.ResourceNotFoundException;
+import com.yushan.content_service.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,9 @@ public class NovelService {
 
     @Autowired
     private NovelMapper novelMapper;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     /**
      * Create a new novel
@@ -69,13 +73,28 @@ public class NovelService {
         novel.setPublishTime(null);
         
         novelMapper.insertSelective(novel);
+        
+        // Cache the new novel
+        redisUtil.cacheNovel(novel.getId(), novel);
+        
         return toResponse(novel);
     }
 
     /**
-     * Get novel by ID
+     * Get novel by ID with Redis caching
      */
     public NovelDetailResponseDTO getNovel(Integer id) {
+        // Try to get from cache first
+        Novel cachedNovel = redisUtil.getCachedNovel(id, Novel.class);
+        if (cachedNovel != null) {
+            // Check if novel is not archived
+            if (cachedNovel.getStatus().equals(NovelStatus.ARCHIVED.getValue())) {
+                throw new ResourceNotFoundException("novel not found");
+            }
+            return toResponse(cachedNovel);
+        }
+        
+        // Cache miss - get from database
         Novel novel = novelMapper.selectByPrimaryKey(id);
         if (novel == null) {
             throw new ResourceNotFoundException("novel not found");
@@ -83,6 +102,10 @@ public class NovelService {
         if (novel.getStatus().equals(NovelStatus.ARCHIVED.getValue())) {
             throw new ResourceNotFoundException("novel not found");
         }
+        
+        // Cache the novel for future requests
+        redisUtil.cacheNovel(id, novel);
+        
         return toResponse(novel);
     }
 
@@ -179,6 +202,13 @@ public class NovelService {
         existing.setUpdateTime(new Date());
 
         novelMapper.updateByPrimaryKeySelective(existing);
+        
+        // Invalidate caches since novel was updated
+        redisUtil.invalidateNovelCaches(id);
+        
+        // Cache the updated novel
+        redisUtil.cacheNovel(id, existing);
+        
         return toResponse(existing);
     }
 
@@ -207,11 +237,14 @@ public class NovelService {
         existing.setUpdateTime(new Date());
         novelMapper.updateByPrimaryKeySelective(existing);
 
+        // Invalidate all caches since novel is archived
+        redisUtil.invalidateNovelCaches(id);
+
         return toResponse(existing);
     }
 
     /**
-     * Increment view count for a novel
+     * Increment view count for a novel with Redis caching
      */
     @Transactional
     public void incrementViewCount(Integer id) {
@@ -224,14 +257,42 @@ public class NovelService {
             throw new ResourceNotFoundException("novel not found");
         }
         
+        // Increment view count in Redis cache first (for performance)
+        redisUtil.incrementCachedViewCount(id);
+        
+        // Update database (async or batch update could be implemented here)
         novelMapper.incrementViewCount(id);
+        
+        // Cache the updated novel data
+        redisUtil.cacheNovel(id, novel);
     }
 
     /**
-     * Get novels with pagination
+     * Get novels with pagination and Redis caching for popular queries
      */
     public PageResponseDTO<NovelDetailResponseDTO> listNovelsWithPagination(NovelSearchRequestDTO request) {
-        return getNovelsWithPagination(request, false);
+        // Check if this is a popular query (no filters, default sorting)
+        boolean isPopularQuery = isPopularQuery(request);
+        
+        if (isPopularQuery) {
+            String cacheKey = generatePopularCacheKey(request);
+            @SuppressWarnings("unchecked")
+            PageResponseDTO<NovelDetailResponseDTO> cachedResult = redisUtil.getCachedPopularNovels(cacheKey, PageResponseDTO.class);
+            if (cachedResult != null) {
+                return cachedResult;
+            }
+        }
+        
+        // Get from database
+        PageResponseDTO<NovelDetailResponseDTO> result = getNovelsWithPagination(request, false);
+        
+        // Cache popular queries
+        if (isPopularQuery) {
+            String cacheKey = generatePopularCacheKey(request);
+            redisUtil.cachePopularNovels(cacheKey, result);
+        }
+        
+        return result;
     }
 
     /**
@@ -440,6 +501,30 @@ public class NovelService {
         dto.setCreateTime(novel.getCreateTime());
         dto.setUpdateTime(novel.getUpdateTime());
         return dto;
+    }
+
+    /**
+     * Check if the request is a popular query (no filters, default sorting)
+     */
+    private boolean isPopularQuery(NovelSearchRequestDTO request) {
+        return request.getCategoryId() == null &&
+               (request.getStatus() == null || request.getStatus().isEmpty()) &&
+               (request.getSearch() == null || request.getSearch().isEmpty()) &&
+               (request.getAuthorId() == null || request.getAuthorId().isEmpty()) &&
+               request.getIsCompleted() == null &&
+               ("createTime".equals(request.getSort()) || request.getSort() == null) &&
+               ("desc".equals(request.getOrder()) || request.getOrder() == null);
+    }
+
+    /**
+     * Generate cache key for popular queries
+     */
+    private String generatePopularCacheKey(NovelSearchRequestDTO request) {
+        return String.format("popular:%d:%d:%s:%s", 
+            request.getPage(), 
+            request.getSize(), 
+            request.getSort() != null ? request.getSort() : "createTime",
+            request.getOrder() != null ? request.getOrder() : "desc");
     }
 
     /**
