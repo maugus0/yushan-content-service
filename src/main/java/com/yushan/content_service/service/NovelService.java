@@ -424,9 +424,13 @@ public class NovelService {
             throw new IllegalArgumentException("only draft novels can be submitted for review");
         }
         
+        String previousStatus = NovelStatus.DRAFT.toString();
         novel.setStatus(NovelStatus.UNDER_REVIEW.getValue());
         novel.setUpdateTime(new Date());
         novelMapper.updateByPrimaryKeySelective(novel);
+        
+        // Publish Kafka event
+        kafkaEventProducerService.publishNovelStatusChangedEvent(novel, previousStatus, NovelStatus.UNDER_REVIEW.toString(), userId, "Submitted for review");
         
         return toResponse(novel);
     }
@@ -495,6 +499,10 @@ public class NovelService {
         }
         
         novelMapper.updateByPrimaryKeySelective(novel);
+        
+        // Publish Kafka event
+        kafkaEventProducerService.publishNovelStatusChangedEvent(novel, requiredCurrentStatus.toString(), newStatus.toString(), null, "Status changed by admin");
+        
         return toResponse(novel);
     }
 

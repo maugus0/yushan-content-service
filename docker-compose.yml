@@ -38,38 +38,6 @@ services:
     networks:
       - yushan-platform-network
 
-  # Kafka for Event Streaming (KRaft mode - no Zookeeper needed)
-  kafka:
-    image: confluentinc/cp-kafka:7.4.0
-    container_name: yushan-content-kafka
-    restart: unless-stopped
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
-      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
-      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-    ports:
-      - "9092:9092"
-    healthcheck:
-      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    networks:
-      - yushan-platform-network
-
-
   # Content Service
   content-service:
     build:
@@ -81,8 +49,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      kafka:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -99,7 +65,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
 
-      # Kafka Configuration
+      # Kafka Configuration - Connect to shared Kafka cluster
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 
       # Eureka Configuration
