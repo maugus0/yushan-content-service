@@ -13,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +64,18 @@ public class NovelIntegrationTest {
     private String authorToken;
     private String adminToken;
     private UUID testAuthorId;
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        // Configure PostgreSQL
+        registry.add("spring.datasource.url", TestcontainersConfiguration.postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", TestcontainersConfiguration.postgres::getUsername);
+        registry.add("spring.datasource.password", TestcontainersConfiguration.postgres::getPassword);
+        
+        // Configure Redis
+        registry.add("spring.data.redis.host", TestcontainersConfiguration.redis::getHost);
+        registry.add("spring.data.redis.port", () -> TestcontainersConfiguration.redis.getMappedPort(6379));
+    }
 
     @BeforeEach
     void setUp() {
