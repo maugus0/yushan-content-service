@@ -531,28 +531,6 @@ public class NovelService {
     }
 
     /**
-     * Update novel cover image URL
-     */
-    @Transactional
-    public NovelDetailResponseDTO updateNovelCoverImage(Integer id, String imageUrl) {
-        Novel existing = novelMapper.selectByPrimaryKey(id);
-        if (existing == null) {
-            throw new ResourceNotFoundException("novel not found");
-        }
-
-        // Update cover image URL
-        existing.setCoverImgUrl(imageUrl);
-        existing.setUpdateTime(new Date());
-        novelMapper.updateByPrimaryKeySelective(existing);
-
-        // Invalidate caches
-        redisUtil.invalidateNovelCaches(id);
-        redisUtil.cacheNovel(id, existing);
-
-        return toResponse(existing);
-    }
-
-    /**
      * Convert Novel entity to NovelDetailResponseDTO
      */
     private NovelDetailResponseDTO toResponse(Novel novel) {

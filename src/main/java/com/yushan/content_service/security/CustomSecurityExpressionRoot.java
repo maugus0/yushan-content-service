@@ -86,14 +86,6 @@ public class CustomSecurityExpressionRoot extends SecurityExpressionRoot impleme
     }
 
     /**
-     * Check if user is a reader
-     * @return true if user has READER role
-     */
-    public boolean isReader() {
-        return hasRoleCustom("READER");
-    }
-
-    /**
      * Get current user from User Service
      * @return UserValidationResponseDTO or null if not authenticated
      */
