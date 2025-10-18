@@ -29,12 +29,14 @@ public class NovelServiceTest {
 
     private NovelMapper novelMapper;
     private RedisUtil redisUtil;
+    private KafkaEventProducerService kafkaEventProducerService;
     private NovelService novelService;
 
     @BeforeEach
     void setUp() {
         novelMapper = Mockito.mock(NovelMapper.class);
         redisUtil = Mockito.mock(RedisUtil.class);
+        kafkaEventProducerService = Mockito.mock(KafkaEventProducerService.class);
 
         novelService = new NovelService();
         try {
@@ -45,6 +47,10 @@ public class NovelServiceTest {
             java.lang.reflect.Field f2 = NovelService.class.getDeclaredField("redisUtil");
             f2.setAccessible(true);
             f2.set(novelService, redisUtil);
+            
+            java.lang.reflect.Field f3 = NovelService.class.getDeclaredField("kafkaEventProducerService");
+            f3.setAccessible(true);
+            f3.set(novelService, kafkaEventProducerService);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -72,7 +78,11 @@ public class NovelServiceTest {
         savedNovel.setCreateTime(new Date());
         savedNovel.setUpdateTime(new Date());
 
-        when(novelMapper.insert(any(Novel.class))).thenReturn(1);
+        when(novelMapper.insertSelective(any(Novel.class))).thenAnswer(invocation -> {
+            Novel novel = invocation.getArgument(0);
+            novel.setId(1); // Set ID after insert
+            return 1;
+        });
         when(novelMapper.selectByPrimaryKey(1)).thenReturn(savedNovel);
 
         // Act
@@ -87,6 +97,8 @@ public class NovelServiceTest {
         assertFalse(result.getIsCompleted());
 
         verify(novelMapper).insertSelective(any(Novel.class));
+        verify(redisUtil).cacheNovel(anyInt(), any(Novel.class));
+        verify(kafkaEventProducerService).publishNovelCreatedEvent(any(Novel.class), any(UUID.class));
     }
 
     @Test
@@ -138,6 +150,7 @@ public class NovelServiceTest {
         existingNovel.setCategoryId(1);
         existingNovel.setIsCompleted(false);
         existingNovel.setStatus(NovelStatus.DRAFT.getValue()); // Set status to avoid NPE
+        existingNovel.setAuthorId(UUID.randomUUID()); // Set authorId for Kafka event
 
         when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(existingNovel);
         when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
@@ -154,6 +167,7 @@ public class NovelServiceTest {
 
         verify(novelMapper).selectByPrimaryKey(novelId);
         verify(novelMapper).updateByPrimaryKeySelective(any(Novel.class));
+        verify(kafkaEventProducerService).publishNovelUpdatedEvent(any(Novel.class), any(UUID.class), any(String[].class));
     }
 
     @Test
@@ -182,6 +196,8 @@ public class NovelServiceTest {
 
         when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
         when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        doNothing().when(redisUtil).invalidateNovelCaches(novelId);
+        doNothing().when(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
 
         // Act
         NovelDetailResponseDTO result = novelService.submitForReview(novelId, authorId);
@@ -220,6 +236,8 @@ public class NovelServiceTest {
 
         when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
         when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        doNothing().when(redisUtil).invalidateNovelCaches(novelId);
+        doNothing().when(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
 
         // Act
         NovelDetailResponseDTO result = novelService.approveNovel(novelId);
@@ -241,6 +259,8 @@ public class NovelServiceTest {
 
         when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
         when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        doNothing().when(redisUtil).invalidateNovelCaches(novelId);
+        doNothing().when(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
 
         // Act
         NovelDetailResponseDTO result = novelService.hideNovel(novelId);
@@ -284,15 +304,23 @@ public class NovelServiceTest {
     void incrementViewCount_ShouldIncrementViewCount() {
         // Arrange
         Integer novelId = 1;
+        UUID userId = UUID.randomUUID();
+        String userAgent = "Test-Agent";
+        String ipAddress = "192.168.1.1";
         Novel novel = createTestNovel(novelId, "Test Novel");
+        
         when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+        when(novelMapper.incrementViewCount(novelId)).thenReturn(1);
 
         // Act
-        novelService.incrementViewCount(novelId);
+        novelService.incrementViewCount(novelId, userId, userAgent, ipAddress);
 
         // Assert
         verify(novelMapper).selectByPrimaryKey(novelId);
         verify(novelMapper).incrementViewCount(novelId);
+        verify(redisUtil).incrementCachedViewCount(novelId);
+        verify(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
+        verify(kafkaEventProducerService).publishNovelViewEvent(any(Novel.class), eq(userId), eq(userAgent), eq(ipAddress), isNull());
     }
 
     private Novel createTestNovel(Integer id, String title) {

@@ -62,6 +62,20 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      client-id: content-service
+      retries: 3
+      batch-size: 16384
+      linger-ms: 5
+      buffer-memory: 33554432
+      acks: all
+      enable-idempotence: true
+      compression-type: snappy
+      request-timeout-ms: 30000
+      delivery-timeout-ms: 120000
+      topic:
+        novel-events: novel-events
+        novel-views: novel-views
+        novel-status-changes: novel-status-changes
 
 # Server Configuration
 server:

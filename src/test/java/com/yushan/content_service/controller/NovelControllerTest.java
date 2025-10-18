@@ -204,6 +204,6 @@ public class NovelControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
 
-        verify(novelService).incrementViewCount(novelId);
+        verify(novelService).incrementViewCount(eq(novelId), any(UUID.class), isNull(), anyString());
     }
 }

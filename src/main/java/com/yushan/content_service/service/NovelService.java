@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +32,9 @@ public class NovelService {
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private KafkaEventProducerService kafkaEventProducerService;
 
     /**
      * Create a new novel
@@ -76,6 +80,9 @@ public class NovelService {
         
         // Cache the new novel
         redisUtil.cacheNovel(novel.getId(), novel);
+        
+        // Publish Kafka event
+        kafkaEventProducerService.publishNovelCreatedEvent(novel, userId);
         
         return toResponse(novel);
     }
@@ -143,16 +150,19 @@ public class NovelService {
 
         boolean changeOtherFieldsNotIsCompleted = false;
         boolean changeStatus = false;
+        List<String> updatedFields = new ArrayList<>();
         
         if (request.getTitle() != null && !request.getTitle().trim().isEmpty()) {
             if (!request.getTitle().equals(existing.getTitle())) {
                 existing.setTitle(request.getTitle());
+                updatedFields.add("title");
                 changeOtherFieldsNotIsCompleted = true;
             }
         }
         if (request.getSynopsis() != null && !request.getSynopsis().trim().isEmpty()) {
             if (!request.getSynopsis().equals(existing.getSynopsis())) {
                 existing.setSynopsis(request.getSynopsis());
+                updatedFields.add("synopsis");
                 changeOtherFieldsNotIsCompleted = true;
             }
         }
@@ -160,6 +170,7 @@ public class NovelService {
             // TODO: Validate category exists when CategoryService is ready
             if (!request.getCategoryId().equals(existing.getCategoryId())) {
                 existing.setCategoryId(request.getCategoryId());
+                updatedFields.add("categoryId");
                 changeOtherFieldsNotIsCompleted = true;
             }
         }
@@ -167,12 +178,14 @@ public class NovelService {
             String newCoverUrl = convertBase64ToUrl(request.getCoverImgBase64());
             if (!newCoverUrl.equals(existing.getCoverImgUrl())) {
                 existing.setCoverImgUrl(newCoverUrl);
+                updatedFields.add("coverImgUrl");
                 changeOtherFieldsNotIsCompleted = true;
             }
         }
         if (request.getIsCompleted() != null) {
             if (!request.getIsCompleted().equals(existing.getIsCompleted())) {
                 existing.setIsCompleted(request.getIsCompleted());
+                updatedFields.add("isCompleted");
             }
         }
         
@@ -183,10 +196,12 @@ public class NovelService {
             int newStatus = s.getValue();
             if (newStatus != existing.getStatus()) {
                 existing.setStatus(newStatus);
+                updatedFields.add("status");
                 
                 // Set publish time if publishing
                 if (s == NovelStatus.PUBLISHED) {
                     existing.setPublishTime(new Date());
+                    updatedFields.add("publishTime");
                 }
                 changeStatus = true;
             }
@@ -197,6 +212,7 @@ public class NovelService {
         if ((currentStatus == NovelStatus.PUBLISHED.getValue() || currentStatus == NovelStatus.HIDDEN.getValue()) 
             && changeOtherFieldsNotIsCompleted && !changeStatus) {
             existing.setStatus(NovelStatus.UNDER_REVIEW.getValue());
+            updatedFields.add("status");
         }
         
         existing.setUpdateTime(new Date());
@@ -208,6 +224,12 @@ public class NovelService {
         
         // Cache the updated novel
         redisUtil.cacheNovel(id, existing);
+        
+        // Publish Kafka event only if there were actual changes
+        if (!updatedFields.isEmpty()) {
+            kafkaEventProducerService.publishNovelUpdatedEvent(existing, existing.getAuthorId(), 
+                updatedFields.toArray(new String[0]));
+        }
         
         return toResponse(existing);
     }
@@ -247,7 +269,7 @@ public class NovelService {
      * Increment view count for a novel with Redis caching
      */
     @Transactional
-    public void incrementViewCount(Integer id) {
+    public void incrementViewCount(Integer id, UUID userId, String userAgent, String ipAddress) {
         // Check if novel exists and is not archived
         Novel novel = novelMapper.selectByPrimaryKey(id);
         if (novel == null) {
@@ -265,6 +287,9 @@ public class NovelService {
         
         // Cache the updated novel data
         redisUtil.cacheNovel(id, novel);
+        
+        // Publish Kafka event
+        kafkaEventProducerService.publishNovelViewEvent(novel, userId, userAgent, ipAddress, null);
     }
 
     /**

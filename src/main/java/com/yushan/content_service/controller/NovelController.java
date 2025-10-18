@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -134,8 +135,24 @@ public class NovelController {
      */
     @PostMapping("/{id}/view")
     @Operation(summary = "[PUBLIC] Increment view count", description = "Increments the view count for a novel.")
-    public ApiResponse<String> incrementViewCount(@PathVariable Integer id) {
-        novelService.incrementViewCount(id);
+    public ApiResponse<String> incrementViewCount(
+            @PathVariable Integer id,
+            HttpServletRequest request) {
+        
+        // Extract user information from request
+        UUID userId = null;
+        try {
+            CustomUserDetails userDetails = getCurrentUser();
+            userId = UUID.fromString(userDetails.getUserId());
+        } catch (Exception e) {
+            // User not authenticated, use anonymous
+            userId = UUID.randomUUID(); // Generate anonymous user ID
+        }
+        
+        String userAgent = request.getHeader("User-Agent");
+        String ipAddress = getClientIpAddress(request);
+        
+        novelService.incrementViewCount(id, userId, userAgent, ipAddress);
         return ApiResponse.success("View count incremented");
     }
 
@@ -315,5 +332,22 @@ public class NovelController {
         
         long count = novelService.getNovelCount(request);
         return ApiResponse.success("Novel count retrieved successfully", count);
+    }
+
+    /**
+     * Helper method to get client IP address
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty()) {
+            return xRealIp;
+        }
+        
+        return request.getRemoteAddr();
     }
 }
