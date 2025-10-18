@@ -67,6 +67,10 @@ public class SecurityConfig {
                 // Test endpoints (only for development)
                 .requestMatchers("/api/test/**").permitAll()
                 
+                // Static resources - allow public access to uploaded images
+                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/static/**").permitAll()
+                
                 // Novel APIs - following yushan-backend pattern
                 .requestMatchers(HttpMethod.POST, "/api/v1/novels").authenticated()  // Create novel
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels").permitAll()      // List novels

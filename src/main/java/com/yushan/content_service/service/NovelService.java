@@ -36,6 +36,9 @@ public class NovelService {
     @Autowired
     private KafkaEventProducerService kafkaEventProducerService;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     /**
      * Create a new novel
      */
@@ -56,7 +59,7 @@ public class NovelService {
         novel.setCategoryId(request.getCategoryId());
         novel.setSynopsis(request.getSynopsis());
         
-        // Convert Base64 to URL if provided
+        // Process cover image after novel is created (to get novelId)
         if (request.getCoverImgBase64() != null && !request.getCoverImgBase64().trim().isEmpty()) {
             novel.setCoverImgUrl(convertBase64ToUrl(request.getCoverImgBase64()));
         }
@@ -174,9 +177,12 @@ public class NovelService {
                 changeOtherFieldsNotIsCompleted = true;
             }
         }
+        String oldCoverUrl = null;
         if (request.getCoverImgBase64() != null && !request.getCoverImgBase64().trim().isEmpty()) {
             String newCoverUrl = convertBase64ToUrl(request.getCoverImgBase64());
             if (!newCoverUrl.equals(existing.getCoverImgUrl())) {
+                // Store old image URL for deletion after successful database update
+                oldCoverUrl = existing.getCoverImgUrl();
                 existing.setCoverImgUrl(newCoverUrl);
                 updatedFields.add("coverImgUrl");
                 changeOtherFieldsNotIsCompleted = true;
@@ -229,6 +235,11 @@ public class NovelService {
         if (!updatedFields.isEmpty()) {
             kafkaEventProducerService.publishNovelUpdatedEvent(existing, existing.getAuthorId(), 
                 updatedFields.toArray(new String[0]));
+        }
+        
+        // Delete old image after successful database update
+        if (oldCoverUrl != null && !oldCoverUrl.trim().isEmpty()) {
+            fileStorageService.deleteImage(oldCoverUrl);
         }
         
         return toResponse(existing);
@@ -285,8 +296,11 @@ public class NovelService {
         // Update database (async or batch update could be implemented here)
         novelMapper.incrementViewCount(id);
         
+        // Get updated novel data from database to ensure consistency
+        Novel updatedNovel = novelMapper.selectByPrimaryKey(id);
+        
         // Cache the updated novel data
-        redisUtil.cacheNovel(id, novel);
+        redisUtil.cacheNovel(id, updatedNovel);
         
         // Publish Kafka event
         kafkaEventProducerService.publishNovelViewEvent(novel, userId, userAgent, ipAddress, null);
@@ -501,9 +515,33 @@ public class NovelService {
         novelMapper.updateByPrimaryKeySelective(novel);
         
         // Publish Kafka event
-        kafkaEventProducerService.publishNovelStatusChangedEvent(novel, requiredCurrentStatus.toString(), newStatus.toString(), null, "Status changed by admin");
+        kafkaEventProducerService.publishNovelStatusChangedEvent(novel, 
+            requiredCurrentStatus != null ? requiredCurrentStatus.toString() : "UNKNOWN", 
+            newStatus.toString(), null, "Status changed by admin");
         
         return toResponse(novel);
+    }
+
+    /**
+     * Update novel cover image URL
+     */
+    @Transactional
+    public NovelDetailResponseDTO updateNovelCoverImage(Integer id, String imageUrl) {
+        Novel existing = novelMapper.selectByPrimaryKey(id);
+        if (existing == null) {
+            throw new ResourceNotFoundException("novel not found");
+        }
+
+        // Update cover image URL
+        existing.setCoverImgUrl(imageUrl);
+        existing.setUpdateTime(new Date());
+        novelMapper.updateByPrimaryKeySelective(existing);
+
+        // Invalidate caches
+        redisUtil.invalidateNovelCaches(id);
+        redisUtil.cacheNovel(id, existing);
+
+        return toResponse(existing);
     }
 
     /**
@@ -574,16 +612,21 @@ public class NovelService {
 
     /**
      * Convert Base64 data URL to a regular URL
-     * For now, this is a placeholder implementation that returns the Base64 data as-is
-     * In a real application, you would save the image to a file storage service
-     * and return the public URL
      */
     private String convertBase64ToUrl(String base64DataUrl) {
-        // For now, we'll store the Base64 data directly as the URL
-        // In production, you should:
-        // 1. Extract the image data from the Base64 string
-        // 2. Save it to a file storage service (AWS S3, Google Cloud Storage, etc.)
-        // 3. Return the public URL
-        return base64DataUrl;
+        if (base64DataUrl == null || base64DataUrl.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // Generate a unique filename
+            String fileName = "novel-" + System.currentTimeMillis();
+            
+            // Upload image and get URL
+            return fileStorageService.uploadImage(base64DataUrl, fileName);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert base64 to URL: " + e.getMessage(), e);
+        }
     }
 }

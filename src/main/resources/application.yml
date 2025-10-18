@@ -77,6 +77,14 @@ spring:
         novel-views: novel-views
         novel-status-changes: novel-status-changes
 
+  # Static Resource Configuration
+  web:
+    resources:
+      static-locations: classpath:/static/,file:uploads/
+      cache:
+        cachecontrol:
+          max-age: 31536000  # 1 year cache for images
+
 # Server Configuration
 server:
   port: 8082
@@ -120,6 +128,33 @@ jwt:
   secret: "yushan-content-service-secret-key-for-jwt-token-generation-and-validation-2024"
   issuer: "yushan-content-service"
   algorithm: "HS256"
+
+# File Storage Configuration
+# For development: use local storage
+# For production: change to S3 storage
+app:
+  storage:
+    type: local  # Change to 's3' when deploying to AWS
+    local:
+      path: uploads
+      base-url: http://localhost:8082
+    # S3 Configuration (uncomment when deploying to AWS)
+    # s3:
+    #   bucket-name: your-bucket-name
+    #   region: us-east-1
+    #   access-key: your-access-key
+    #   secret-key: your-secret-key
+    #   base-url: https://your-bucket-name.s3.amazonaws.com
+  image:
+    max-file-size: 10485760  # 10MB in bytes
+    max-width: 4000
+    max-height: 4000
+    min-width: 200
+    min-height: 200
+    supported-formats: jpeg,jpg,png,gif,webp
+    standard-size:
+      width: 800
+      height: 600
 
 # Logging Configuration
 logging:

@@ -105,11 +105,21 @@ public class NovelController {
      * PUT /api/v1/novels/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthorOrAdmin()")
+    @PreAuthorize("@novelGuard.canEdit(#id, authentication)")
     @Operation(summary = "[AUTHOR/ADMIN] Update novel", description = "Updates an existing novel.")
     public ApiResponse<NovelDetailResponseDTO> updateNovel(
             @PathVariable Integer id,
-            @Valid @RequestBody NovelUpdateRequestDTO request) {
+            @Valid @RequestBody NovelUpdateRequestDTO request,
+            Authentication authentication) {
+        
+        // Check if user is trying to change status - only admin allowed
+        if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin) {
+                throw new IllegalArgumentException("Only admin can change novel status directly");
+            }
+        }
         
         NovelDetailResponseDTO novel = novelService.updateNovel(id, request);
         return ApiResponse.success("Novel updated successfully", novel);
@@ -120,7 +130,7 @@ public class NovelController {
      * DELETE /api/v1/novels/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthorOrAdmin()")
+    @PreAuthorize("hasRole('ADMIN') or @novelGuard.canEdit(#id, authentication)")
     @Operation(summary = "[AUTHOR/ADMIN] Archive novel", description = "Archives (soft delete) a novel.")
     public ApiResponse<NovelDetailResponseDTO> archiveNovel(
             @PathVariable Integer id) {
@@ -254,8 +264,8 @@ public class NovelController {
      * POST /api/v1/novels/{id}/hide
      */
     @PostMapping("/{id}/hide")
-    @PreAuthorize("isAdmin()")
-    @Operation(summary = "[ADMIN] Hide novel", description = "Hides a novel from public view.")
+    @PreAuthorize("hasRole('ADMIN') or @novelGuard.canHideOrUnhide(#id, authentication)")
+    @Operation(summary = "[ADMIN/AUTHOR] Hide novel", description = "Hides a novel from public view.")
     public ApiResponse<NovelDetailResponseDTO> hideNovel(@PathVariable Integer id) {
         NovelDetailResponseDTO novel = novelService.hideNovel(id);
         return ApiResponse.success("Novel hidden", novel);
@@ -266,8 +276,8 @@ public class NovelController {
      * POST /api/v1/novels/{id}/unhide
      */
     @PostMapping("/{id}/unhide")
-    @PreAuthorize("isAdmin()")
-    @Operation(summary = "[ADMIN] Unhide novel", description = "Makes a hidden novel visible again.")
+    @PreAuthorize("hasRole('ADMIN') or @novelGuard.canHideOrUnhide(#id, authentication)")
+    @Operation(summary = "[ADMIN/AUTHOR] Unhide novel", description = "Makes a hidden novel visible again.")
     public ApiResponse<NovelDetailResponseDTO> unhideNovel(@PathVariable Integer id) {
         NovelDetailResponseDTO novel = novelService.unhideNovel(id);
         return ApiResponse.success("Novel unhidden and published", novel);

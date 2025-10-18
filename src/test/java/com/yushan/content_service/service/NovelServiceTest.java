@@ -316,7 +316,7 @@ public class NovelServiceTest {
         novelService.incrementViewCount(novelId, userId, userAgent, ipAddress);
 
         // Assert
-        verify(novelMapper).selectByPrimaryKey(novelId);
+        verify(novelMapper, times(2)).selectByPrimaryKey(novelId); // Called twice: once to check existence, once to get updated data
         verify(novelMapper).incrementViewCount(novelId);
         verify(redisUtil).incrementCachedViewCount(novelId);
         verify(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
