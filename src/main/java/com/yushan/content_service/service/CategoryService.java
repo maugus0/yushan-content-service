@@ -355,10 +355,21 @@ public class CategoryService {
 
         // Convert to lowercase and replace spaces/special chars with hyphens
         String slug = withoutAccents.toLowerCase(Locale.ENGLISH)
-                .replaceAll("[^a-z0-9]+", "-")  // Replace non-alphanumeric with hyphen
-                .replaceAll("^-+", "")          // Remove leading hyphens
-                .replaceAll("-+$", "")          // Remove trailing hyphens
-                .replaceAll("-+", "-");         // Replace multiple hyphens with single
+                .replaceAll("[^a-z0-9]+", "-");  // Replace non-alphanumeric with hyphen
+        
+        // ReDoS-safe cleanup using String methods instead of regex
+        // Remove leading hyphens
+        while (slug.startsWith("-")) {
+            slug = slug.substring(1);
+        }
+        // Remove trailing hyphens  
+        while (slug.endsWith("-")) {
+            slug = slug.substring(0, slug.length() - 1);
+        }
+        // Replace multiple consecutive hyphens with single hyphen
+        while (slug.contains("--")) {
+            slug = slug.replace("--", "-");
+        }
 
         return slug;
     }
