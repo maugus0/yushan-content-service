@@ -54,6 +54,14 @@ public class ChapterIntegrationTest {
 
     @MockBean
     private KafkaEventProducerService kafkaEventProducerService;
+    
+    // Mock Elasticsearch services
+    @MockBean
+    private com.yushan.content_service.service.ElasticsearchIndexService elasticsearchIndexService;
+    @MockBean
+    private com.yushan.content_service.service.ElasticsearchSearchService elasticsearchSearchService;
+    @MockBean
+    private com.yushan.content_service.service.ElasticsearchAutoIndexService elasticsearchAutoIndexService;
 
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
