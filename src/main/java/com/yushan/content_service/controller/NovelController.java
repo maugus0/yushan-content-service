@@ -20,8 +20,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * REST Controller for novel management operations.
@@ -342,6 +345,30 @@ public class NovelController {
         
         long count = novelService.getNovelCount(request);
         return ApiResponse.success("Novel count retrieved successfully", count);
+    }
+
+    /**
+     * Batch get novels by IDs
+     * GET /api/v1/novels/batch?ids=1,2,3
+     */
+    @GetMapping("/batch")
+    @Operation(summary = "[PUBLIC] Batch get novels by IDs", description = "Retrieves multiple novels by their IDs in a single request.")
+    public ApiResponse<List<NovelDetailResponseDTO>> getNovelsByIds(
+            @RequestParam(value = "ids", required = false) String ids) {
+        // Handle empty or null IDs
+        if (ids == null || ids.trim().isEmpty()) {
+            return ApiResponse.success("Novels retrieved successfully", new ArrayList<>());
+        }
+        
+        // Parse comma-separated IDs
+        List<Integer> idList = Arrays.stream(ids.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(Integer::parseInt)
+            .collect(Collectors.toList());
+            
+        List<NovelDetailResponseDTO> novels = novelService.getNovelsByIds(idList);
+        return ApiResponse.success("Novels retrieved successfully", novels);
     }
 
     /**

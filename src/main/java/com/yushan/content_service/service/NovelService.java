@@ -696,6 +696,29 @@ public class NovelService {
     }
 
     /**
+     * Get novels by IDs (batch operation)
+     */
+    public List<NovelDetailResponseDTO> getNovelsByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Remove duplicates and limit to reasonable size
+        List<Integer> uniqueIds = ids.stream()
+            .distinct()
+            .limit(100) // Limit to 100 novels per request
+            .collect(Collectors.toList());
+        
+        // Get novels from database
+        List<Novel> novels = novelMapper.selectByIds(uniqueIds);
+        
+        // Convert to response DTOs
+        return novels.stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Convert Base64 data URL to a regular URL
      */
     private String convertBase64ToUrl(String base64DataUrl) {

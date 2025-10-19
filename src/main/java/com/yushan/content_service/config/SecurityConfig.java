@@ -91,6 +91,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/category/**").permitAll() // Get by category
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/uuid/**").permitAll() // Get by UUID
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/author/**").permitAll() // Get by author
+                .requestMatchers(HttpMethod.GET, "/api/v1/novels/batch").permitAll() // Batch get by IDs
                 
                 // Admin endpoints - require admin role
                 .requestMatchers("/api/v1/novels/admin/**").hasRole("ADMIN")
