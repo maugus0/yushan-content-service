@@ -1,7 +1,11 @@
 package com.yushan.content_service;
 
+import com.yushan.content_service.service.ElasticsearchSearchService;
+import com.yushan.content_service.repository.elasticsearch.NovelElasticsearchRepository;
+import com.yushan.content_service.repository.elasticsearch.ChapterElasticsearchRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
@@ -10,6 +14,15 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest
 @ActiveProfiles("test")
 class ContentServiceApplicationTests {
+
+    @MockBean
+    private ElasticsearchSearchService elasticsearchSearchService;
+
+    @MockBean
+    private NovelElasticsearchRepository novelElasticsearchRepository;
+
+    @MockBean
+    private ChapterElasticsearchRepository chapterElasticsearchRepository;
 
     @Test
     void contextLoads() {

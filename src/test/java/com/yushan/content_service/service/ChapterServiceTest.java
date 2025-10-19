@@ -29,6 +29,7 @@ public class ChapterServiceTest {
     private RedisUtil redisUtil;
     private KafkaEventProducerService kafkaEventProducerService;
     private NovelService novelService;
+    private ElasticsearchAutoIndexService elasticsearchAutoIndexService;
     private ChapterService chapterService;
 
     @BeforeEach
@@ -37,6 +38,7 @@ public class ChapterServiceTest {
         redisUtil = Mockito.mock(RedisUtil.class);
         kafkaEventProducerService = Mockito.mock(KafkaEventProducerService.class);
         novelService = Mockito.mock(NovelService.class);
+        elasticsearchAutoIndexService = Mockito.mock(ElasticsearchAutoIndexService.class);
 
         chapterService = new ChapterService();
         try {
@@ -55,6 +57,10 @@ public class ChapterServiceTest {
             java.lang.reflect.Field f4 = ChapterService.class.getDeclaredField("novelService");
             f4.setAccessible(true);
             f4.set(chapterService, novelService);
+            
+            java.lang.reflect.Field f5 = ChapterService.class.getDeclaredField("elasticsearchAutoIndexService");
+            f5.setAccessible(true);
+            f5.set(chapterService, elasticsearchAutoIndexService);
         } catch (Exception e) {
             throw new RuntimeException("Failed to inject dependencies", e);
         }

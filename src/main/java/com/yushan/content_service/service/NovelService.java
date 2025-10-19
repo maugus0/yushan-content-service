@@ -43,6 +43,9 @@ public class NovelService {
     @Autowired
     private CategoryService categoryService;
 
+    @Autowired(required = false)
+    private ElasticsearchAutoIndexService elasticsearchAutoIndexService;
+
     /**
      * Create a new novel
      */
@@ -94,6 +97,11 @@ public class NovelService {
         // Publish Kafka event
         kafkaEventProducerService.publishNovelCreatedEvent(novel, userId);
         
+        // Auto-index to Elasticsearch
+        if (elasticsearchAutoIndexService != null) {
+            elasticsearchAutoIndexService.onNovelCreated(novel);
+        }
+        
         return toResponse(novel);
     }
 
@@ -119,6 +127,11 @@ public class NovelService {
         
         // Cache the updated novel
         redisUtil.cacheNovel(novelId, novel);
+        
+        // Auto-index to Elasticsearch (statistics changed)
+        if (elasticsearchAutoIndexService != null) {
+            elasticsearchAutoIndexService.onNovelUpdated(novel);
+        }
     }
 
     /**
@@ -295,6 +308,11 @@ public class NovelService {
         if (!updatedFields.isEmpty()) {
             kafkaEventProducerService.publishNovelUpdatedEvent(existing, existing.getAuthorId(), 
                 updatedFields.toArray(new String[0]));
+            
+            // Auto-index to Elasticsearch
+            if (elasticsearchAutoIndexService != null) {
+                elasticsearchAutoIndexService.onNovelUpdated(existing);
+            }
         }
         
         // Delete old image after successful database update
@@ -332,6 +350,11 @@ public class NovelService {
 
         // Invalidate all caches since novel is archived
         redisUtil.invalidateNovelCaches(id);
+
+        // Auto-remove from Elasticsearch (archived novels should not appear in search)
+        if (elasticsearchAutoIndexService != null) {
+            elasticsearchAutoIndexService.onNovelDeleted(id);
+        }
 
         return toResponse(existing);
     }

@@ -620,6 +620,31 @@
              OR synopsis ILIKE CONCAT('%', #{req.search}, '%')
              OR author_name ILIKE CONCAT('%', #{req.search}, '%'))
       </if>
+      <!-- Advanced filtering options -->
+      <if test="req.minRating != null">
+        AND avg_rating &gt;= #{req.minRating}
+      </if>
+      <if test="req.maxRating != null">
+        AND avg_rating &lt;= #{req.maxRating}
+      </if>
+      <if test="req.minWordCount != null">
+        AND word_cnt &gt;= #{req.minWordCount}
+      </if>
+      <if test="req.maxWordCount != null">
+        AND word_cnt &lt;= #{req.maxWordCount}
+      </if>
+      <if test="req.minChapterCount != null">
+        AND chapter_cnt &gt;= #{req.minChapterCount}
+      </if>
+      <if test="req.maxChapterCount != null">
+        AND chapter_cnt &lt;= #{req.maxChapterCount}
+      </if>
+      <if test="req.publishedAfter != null">
+        AND publish_time &gt;= #{req.publishedAfter}
+      </if>
+      <if test="req.publishedBefore != null">
+        AND publish_time &lt;= #{req.publishedBefore}
+      </if>
     </where>
     <choose>
       <when test="req.sort == 'title'">
@@ -646,6 +671,23 @@
         ORDER BY update_time 
         <if test="req.order == 'desc'">DESC</if>
         <if test="req.order == 'asc'">ASC</if>
+      </when>
+      <when test="req.sort == 'relevance'">
+        ORDER BY 
+          CASE 
+            WHEN #{req.search} IS NOT NULL AND #{req.search} != '' THEN
+              CASE 
+                WHEN title ILIKE CONCAT('%', #{req.search}, '%') THEN 1
+                WHEN synopsis ILIKE CONCAT('%', #{req.search}, '%') THEN 2
+                WHEN author_name ILIKE CONCAT('%', #{req.search}, '%') THEN 3
+                ELSE 4
+              END
+            ELSE 0
+          END,
+          view_cnt DESC, avg_rating DESC, create_time DESC
+      </when>
+      <when test="req.sort == 'popularity'">
+        ORDER BY (view_cnt * 0.7 + vote_cnt * 0.3) DESC, avg_rating DESC
       </when>
       <otherwise>
         ORDER BY create_time 
@@ -686,6 +728,31 @@
         AND (title ILIKE CONCAT('%', #{req.search}, '%') 
              OR synopsis ILIKE CONCAT('%', #{req.search}, '%')
              OR author_name ILIKE CONCAT('%', #{req.search}, '%'))
+      </if>
+      <!-- Advanced filtering options -->
+      <if test="req.minRating != null">
+        AND avg_rating &gt;= #{req.minRating}
+      </if>
+      <if test="req.maxRating != null">
+        AND avg_rating &lt;= #{req.maxRating}
+      </if>
+      <if test="req.minWordCount != null">
+        AND word_cnt &gt;= #{req.minWordCount}
+      </if>
+      <if test="req.maxWordCount != null">
+        AND word_cnt &lt;= #{req.maxWordCount}
+      </if>
+      <if test="req.minChapterCount != null">
+        AND chapter_cnt &gt;= #{req.minChapterCount}
+      </if>
+      <if test="req.maxChapterCount != null">
+        AND chapter_cnt &lt;= #{req.maxChapterCount}
+      </if>
+      <if test="req.publishedAfter != null">
+        AND publish_time &gt;= #{req.publishedAfter}
+      </if>
+      <if test="req.publishedBefore != null">
+        AND publish_time &lt;= #{req.publishedBefore}
       </if>
     </where>
   </select>

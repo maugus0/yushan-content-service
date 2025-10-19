@@ -48,6 +48,13 @@ spring:
           max-idle: 8
           min-idle: 2
 
+  # Elasticsearch Configuration
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
+      connection-timeout: 5
+      read-timeout: 30
+
   # Kafka Configuration (Phase 2)
   kafka:
     bootstrap-servers: localhost:9092

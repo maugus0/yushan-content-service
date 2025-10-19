@@ -50,6 +50,9 @@ public interface ChapterMapper {
     
     long countPublishedByNovelId(@Param("novelId") Integer novelId);
     
+    // Get all published chapters
+    List<Chapter> selectPublishedChapters();
+    
     // Chapter navigation
     Chapter selectNextChapter(@Param("novelId") Integer novelId,
                               @Param("chapterNumber") Integer chapterNumber);

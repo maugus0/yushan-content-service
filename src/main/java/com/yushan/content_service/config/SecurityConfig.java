@@ -96,6 +96,9 @@ public class SecurityConfig {
                 // Admin endpoints - require admin role
                 .requestMatchers("/api/v1/novels/admin/**").hasRole("ADMIN")
                 
+                // Search APIs - public read access
+                .requestMatchers(HttpMethod.GET, "/api/v1/search/**").permitAll()
+                
                 // Chapter APIs - following yushan-backend pattern
                 .requestMatchers(HttpMethod.POST, "/api/v1/chapters").hasAnyRole("AUTHOR","ADMIN")  // Create chapter
                 .requestMatchers(HttpMethod.POST, "/api/v1/chapters/batch").hasAnyRole("AUTHOR","ADMIN")  // Batch create chapters

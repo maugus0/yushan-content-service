@@ -287,6 +287,15 @@
         limit #{limit} offset #{offset}
     </select>
     
+    <select id="selectPublishedChapters" resultMap="ListResultMap" >
+        select
+        <include refid="List_Column_List" />
+        from chapter
+        where is_valid = true
+        and publish_time &lt;= NOW()
+        order by novel_id, chapter_number asc
+    </select>
+    
     <select id="countByNovelId" resultType="long" >
         select count(*)
         from chapter

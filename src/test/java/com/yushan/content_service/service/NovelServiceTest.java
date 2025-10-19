@@ -31,6 +31,7 @@ public class NovelServiceTest {
     private RedisUtil redisUtil;
     private KafkaEventProducerService kafkaEventProducerService;
     private CategoryService categoryService;
+    private ElasticsearchAutoIndexService elasticsearchAutoIndexService;
     private NovelService novelService;
 
     @BeforeEach
@@ -39,6 +40,7 @@ public class NovelServiceTest {
         redisUtil = Mockito.mock(RedisUtil.class);
         kafkaEventProducerService = Mockito.mock(KafkaEventProducerService.class);
         categoryService = Mockito.mock(CategoryService.class);
+        elasticsearchAutoIndexService = Mockito.mock(ElasticsearchAutoIndexService.class);
 
         novelService = new NovelService();
         try {
@@ -57,6 +59,10 @@ public class NovelServiceTest {
             java.lang.reflect.Field f4 = NovelService.class.getDeclaredField("categoryService");
             f4.setAccessible(true);
             f4.set(novelService, categoryService);
+            
+            java.lang.reflect.Field f5 = NovelService.class.getDeclaredField("elasticsearchAutoIndexService");
+            f5.setAccessible(true);
+            f5.set(novelService, elasticsearchAutoIndexService);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

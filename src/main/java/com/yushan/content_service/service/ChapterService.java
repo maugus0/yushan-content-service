@@ -30,6 +30,9 @@ public class ChapterService {
     @Autowired
     private KafkaEventProducerService kafkaEventProducerService;
 
+    @Autowired(required = false)
+    private ElasticsearchAutoIndexService elasticsearchAutoIndexService;
+
 
     @Transactional
     public ChapterDetailResponseDTO createChapter(UUID userId, ChapterCreateRequestDTO req) {
@@ -86,6 +89,11 @@ public class ChapterService {
         } catch (Exception e) {
             // Log error but don't fail the transaction
             System.err.println("Failed to publish chapter created event: " + e.getMessage());
+        }
+
+        // Auto-index to Elasticsearch
+        if (elasticsearchAutoIndexService != null) {
+            elasticsearchAutoIndexService.onChapterCreated(chapter);
         }
 
         return getChapterByUuid(chapter.getUuid());
@@ -445,6 +453,11 @@ public class ChapterService {
                 // Log error but don't fail the transaction
                 System.err.println("Failed to publish chapter updated event: " + e.getMessage());
             }
+
+            // Auto-index to Elasticsearch
+            if (elasticsearchAutoIndexService != null) {
+                elasticsearchAutoIndexService.onChapterUpdated(existing);
+            }
         }
 
         return getChapterByUuid(req.getUuid());
@@ -560,6 +573,11 @@ public class ChapterService {
         redisUtil.deleteChapterCache(uuid);
         redisUtil.deleteChapterCacheByNovelAndNumber(chapter.getNovelId(), chapter.getChapterNumber());
         redisUtil.invalidateChapterCaches(chapter.getNovelId());
+
+        // Auto-remove from Elasticsearch
+        if (elasticsearchAutoIndexService != null) {
+            elasticsearchAutoIndexService.onChapterDeleted(chapter.getId());
+        }
     }
 
     @Transactional
@@ -577,6 +595,10 @@ public class ChapterService {
         List<Chapter> chapters = chapterMapper.selectByNovelId(novelId);
         for (Chapter chapter : chapters) {
             chapterMapper.softDeleteByPrimaryKey(chapter.getId());
+            // Auto-remove from Elasticsearch
+            if (elasticsearchAutoIndexService != null) {
+                elasticsearchAutoIndexService.onChapterDeleted(chapter.getId());
+            }
         }
 
         // Update novel statistics
@@ -649,6 +671,11 @@ public class ChapterService {
         redisUtil.deleteChapterCache(uuid);
         redisUtil.deleteChapterCacheByNovelAndNumber(chapter.getNovelId(), chapter.getChapterNumber());
         redisUtil.invalidateChapterCaches(chapter.getNovelId());
+
+        // Auto-remove from Elasticsearch
+        if (elasticsearchAutoIndexService != null) {
+            elasticsearchAutoIndexService.onChapterDeleted(chapter.getId());
+        }
     }
 
     /**

@@ -38,6 +38,34 @@ services:
     networks:
       - yushan-platform-network
 
+  # Elasticsearch for Advanced Search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    container_name: yushan-content-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - content_elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - yushan-platform-network
+
   # Content Service
   content-service:
     build:
@@ -49,6 +77,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      elasticsearch:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
@@ -64,6 +94,11 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+
+      # Elasticsearch Configuration
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_SCHEME: http
 
       # Kafka Configuration - Connect to shared Kafka cluster
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -88,6 +123,8 @@ volumes:
   content_pg_data:
     driver: local
   content_redis_data:
+    driver: local
+  content_elasticsearch_data:
     driver: local
 
 # Connect to the existing Eureka network

@@ -55,6 +55,8 @@
         <gson.version>2.11.0</gson.version>
         <!-- JWT version -->
         <jjwt.version>0.12.6</jjwt.version>
+        <!-- Elasticsearch version -->
+        <elasticsearch-rest-high-level-client.version>7.17.9</elasticsearch-rest-high-level-client.version>
     </properties>
     <dependencies>
         <dependency>
@@ -84,6 +86,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- Elasticsearch Dependencies -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>${elasticsearch-rest-high-level-client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
