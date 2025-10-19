@@ -56,7 +56,7 @@
         <!-- JWT version -->
         <jjwt.version>0.12.6</jjwt.version>
         <!-- Elasticsearch version -->
-        <elasticsearch-rest-high-level-client.version>7.17.9</elasticsearch-rest-high-level-client.version>
+        <elasticsearch-rest-high-level-client.version>7.17.25</elasticsearch-rest-high-level-client.version>
     </properties>
     <dependencies>
         <dependency>
