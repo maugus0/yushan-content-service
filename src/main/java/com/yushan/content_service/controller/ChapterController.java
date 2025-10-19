@@ -19,7 +19,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * REST Controller for chapter management operations.
@@ -322,6 +326,30 @@ public class ChapterController {
             Authentication authentication) {
         Integer nextNumber = chapterService.getNextAvailableChapterNumber(novelId);
         return ApiResponse.success("Next chapter number retrieved", nextNumber);
+    }
+
+    /**
+     * Batch get chapters by IDs
+     * GET /api/v1/chapters/batch?ids=1,2,3
+     */
+    @GetMapping("/batch")
+    @Operation(summary = "[PUBLIC] Batch get chapters by IDs", description = "Retrieves multiple chapters by their IDs in a single request.")
+    public ApiResponse<List<ChapterDetailResponseDTO>> getChaptersByIds(
+            @RequestParam(value = "ids", required = false) String ids) {
+        // Handle empty or null IDs
+        if (ids == null || ids.trim().isEmpty()) {
+            return ApiResponse.success("Chapters retrieved successfully", new ArrayList<>());
+        }
+        
+        // Parse comma-separated IDs
+        List<Integer> idList = Arrays.stream(ids.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(Integer::parseInt)
+            .collect(Collectors.toList());
+            
+        List<ChapterDetailResponseDTO> chapters = chapterService.getChaptersByIds(idList);
+        return ApiResponse.success("Chapters retrieved successfully", chapters);
     }
 
     /**

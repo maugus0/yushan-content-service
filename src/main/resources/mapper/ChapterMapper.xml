@@ -242,9 +242,10 @@
         <include refid="Base_Column_List" />
         from chapter
         where id IN
-        <foreach item="id" collection="list" open="(" separator="," close=")">
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
             #{id}
         </foreach>
+        order by create_time desc
     </select>
     
     <!-- Novel-specific chapter queries -->

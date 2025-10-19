@@ -203,6 +203,26 @@ public class ChapterService {
         return response;
     }
 
+    public List<ChapterDetailResponseDTO> getChaptersByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Remove duplicates and limit to reasonable size
+        List<Integer> uniqueIds = ids.stream()
+            .distinct()
+            .limit(100) // Limit to 100 chapters per request
+            .collect(Collectors.toList());
+        
+        // Get chapters from database
+        List<Chapter> chapters = chapterMapper.selectByIds(uniqueIds);
+        
+        // Convert to response DTOs
+        return chapters.stream()
+            .map(this::toDetailResponse)
+            .collect(Collectors.toList());
+    }
+
     public PageResponseDTO<ChapterSummaryDTO> getChaptersByNovelId(Integer novelId, Integer page, Integer pageSize, Boolean publishedOnly) {
         // Validate novel exists
         Novel novel = novelService.getNovelEntity(novelId);
