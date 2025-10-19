@@ -76,6 +76,9 @@ spring:
         novel-events: novel-events
         novel-views: novel-views
         novel-status-changes: novel-status-changes
+        chapter-events: chapter-events
+        chapter-views: chapter-views
+        chapter-published: chapter-published
 
   # Static Resource Configuration
   web:

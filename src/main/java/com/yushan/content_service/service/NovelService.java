@@ -98,6 +98,52 @@ public class NovelService {
     }
 
     /**
+     * Update novel statistics (chapter count and word count)
+     * For internal use by other services
+     */
+    @Transactional
+    public void updateNovelStatistics(Integer novelId, int chapterCount, long wordCount) {
+        Novel novel = getNovelEntity(novelId);
+        if (novel == null) {
+            return;
+        }
+
+        novel.setChapterCnt(chapterCount);
+        novel.setWordCnt(wordCount);
+        novel.setUpdateTime(new Date());
+
+        novelMapper.updateByPrimaryKeySelective(novel);
+        
+        // Invalidate cache since novel was updated
+        redisUtil.invalidateNovelCaches(novelId);
+        
+        // Cache the updated novel
+        redisUtil.cacheNovel(novelId, novel);
+    }
+
+    /**
+     * Get novel entity by ID (for internal use by other services)
+     */
+    public Novel getNovelEntity(Integer id) {
+        // Try to get from cache first
+        Novel cachedNovel = redisUtil.getCachedNovel(id, Novel.class);
+        if (cachedNovel != null) {
+            return cachedNovel;
+        }
+        
+        // Cache miss - get from database
+        Novel novel = novelMapper.selectByPrimaryKey(id);
+        if (novel == null) {
+            return null;
+        }
+        
+        // Cache the novel for future requests
+        redisUtil.cacheNovel(id, novel);
+        
+        return novel;
+    }
+
+    /**
      * Get novel by ID with Redis caching
      */
     public NovelDetailResponseDTO getNovel(Integer id) {

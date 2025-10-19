@@ -1,5 +1,6 @@
 package com.yushan.content_service.util;
 
+import com.yushan.content_service.dto.common.PageResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ public class RedisUtil {
 
     // Cache key prefixes
     private static final String NOVEL_PREFIX = "novel:";
+    private static final String CHAPTER_PREFIX = "chapter:";
     private static final String VIEW_COUNT_PREFIX = "view_count:";
     private static final String POPULAR_PREFIX = "popular:";
     private static final String SEARCH_PREFIX = "search:";
@@ -27,6 +29,7 @@ public class RedisUtil {
 
     // Cache TTL constants
     private static final Duration NOVEL_CACHE_TTL = Duration.ofHours(1);
+    private static final Duration CHAPTER_CACHE_TTL = Duration.ofHours(2);
     private static final Duration VIEW_COUNT_CACHE_TTL = Duration.ofMinutes(30);
     private static final Duration POPULAR_CACHE_TTL = Duration.ofMinutes(15);
     private static final Duration SEARCH_CACHE_TTL = Duration.ofMinutes(10);
@@ -148,6 +151,156 @@ public class RedisUtil {
         delete(key);
     }
 
+    // Chapter-specific cache methods
+
+    /**
+     * Cache chapter data by UUID
+     */
+    public void cacheChapter(java.util.UUID chapterUuid, Object chapterData) {
+        String key = CHAPTER_PREFIX + "uuid:" + chapterUuid;
+        set(key, chapterData, CHAPTER_CACHE_TTL);
+    }
+
+    /**
+     * Get cached chapter data by UUID
+     */
+    public Object getCachedChapter(java.util.UUID chapterUuid) {
+        String key = CHAPTER_PREFIX + "uuid:" + chapterUuid;
+        return get(key);
+    }
+
+    /**
+     * Get cached chapter data by UUID with type casting
+     */
+    public <T> T getCachedChapter(java.util.UUID chapterUuid, Class<T> clazz) {
+        String key = CHAPTER_PREFIX + "uuid:" + chapterUuid;
+        return get(key, clazz);
+    }
+
+    /**
+     * Cache chapter data by novel ID and chapter number
+     */
+    public void cacheChapterByNovelAndNumber(Integer novelId, Integer chapterNumber, Object chapterData) {
+        String key = CHAPTER_PREFIX + "novel:" + novelId + ":number:" + chapterNumber;
+        set(key, chapterData, CHAPTER_CACHE_TTL);
+    }
+
+    /**
+     * Get cached chapter data by novel ID and chapter number
+     */
+    public Object getCachedChapterByNovelAndNumber(Integer novelId, Integer chapterNumber) {
+        String key = CHAPTER_PREFIX + "novel:" + novelId + ":number:" + chapterNumber;
+        return get(key);
+    }
+
+    /**
+     * Get cached chapter data by novel ID and chapter number with type casting
+     */
+    public <T> T getCachedChapterByNovelAndNumber(Integer novelId, Integer chapterNumber, Class<T> clazz) {
+        String key = CHAPTER_PREFIX + "novel:" + novelId + ":number:" + chapterNumber;
+        return get(key, clazz);
+    }
+
+    /**
+     * Cache chapter list for a novel
+     */
+    public void cacheChapterList(Integer novelId, String cacheKey, Object chapterListData) {
+        String key = CHAPTER_PREFIX + "list:" + novelId + ":" + cacheKey;
+        set(key, chapterListData, CHAPTER_CACHE_TTL);
+    }
+
+    /**
+     * Get cached chapter list for a novel
+     */
+    public Object getCachedChapterList(Integer novelId, String cacheKey) {
+        String key = CHAPTER_PREFIX + "list:" + novelId + ":" + cacheKey;
+        return get(key);
+    }
+
+    /**
+     * Get cached chapter list for a novel with type casting
+     */
+    public <T> T getCachedChapterList(Integer novelId, String cacheKey, Class<T> clazz) {
+        String key = CHAPTER_PREFIX + "list:" + novelId + ":" + cacheKey;
+        return get(key, clazz);
+    }
+
+    /**
+     * Get cached chapter list for a novel with proper generic typing
+     */
+    @SuppressWarnings("unchecked")
+    public <T> PageResponseDTO<T> getCachedChapterListTyped(Integer novelId, String cacheKey) {
+        String key = CHAPTER_PREFIX + "list:" + novelId + ":" + cacheKey;
+        return (PageResponseDTO<T>) get(key, PageResponseDTO.class);
+    }
+
+    /**
+     * Cache chapter statistics for a novel
+     */
+    public void cacheChapterStatistics(Integer novelId, Object statisticsData) {
+        String key = CHAPTER_PREFIX + "stats:" + novelId;
+        set(key, statisticsData, CHAPTER_CACHE_TTL);
+    }
+
+    /**
+     * Get cached chapter statistics for a novel
+     */
+    public Object getCachedChapterStatistics(Integer novelId) {
+        String key = CHAPTER_PREFIX + "stats:" + novelId;
+        return get(key);
+    }
+
+    /**
+     * Get cached chapter statistics for a novel with type casting
+     */
+    public <T> T getCachedChapterStatistics(Integer novelId, Class<T> clazz) {
+        String key = CHAPTER_PREFIX + "stats:" + novelId;
+        return get(key, clazz);
+    }
+
+    /**
+     * Delete chapter cache by UUID
+     */
+    public void deleteChapterCache(java.util.UUID chapterUuid) {
+        String key = CHAPTER_PREFIX + "uuid:" + chapterUuid;
+        delete(key);
+    }
+
+    /**
+     * Delete chapter cache by novel ID and chapter number
+     */
+    public void deleteChapterCacheByNovelAndNumber(Integer novelId, Integer chapterNumber) {
+        String key = CHAPTER_PREFIX + "novel:" + novelId + ":number:" + chapterNumber;
+        delete(key);
+    }
+
+    /**
+     * Invalidate all chapter-related caches for a novel
+     */
+    public void invalidateChapterCaches(Integer novelId) {
+        // Delete chapter lists
+        Set<String> listKeys = keys(CHAPTER_PREFIX + "list:" + novelId + ":*");
+        if (!listKeys.isEmpty()) {
+            delete(listKeys);
+        }
+        
+        // Delete statistics
+        delete(CHAPTER_PREFIX + "stats:" + novelId);
+        
+        // Delete individual chapters (this is expensive, so we'll let them expire naturally)
+        // In production, you might want to track chapter UUIDs for more targeted deletion
+    }
+
+    /**
+     * Invalidate all chapter caches (use with caution)
+     */
+    public void invalidateAllChapterCaches() {
+        Set<String> chapterKeys = keys(CHAPTER_PREFIX + "*");
+        if (!chapterKeys.isEmpty()) {
+            delete(chapterKeys);
+        }
+    }
+
     // View count cache methods
 
     /**
@@ -234,6 +387,7 @@ public class RedisUtil {
     public void invalidateNovelCaches(Integer novelId) {
         deleteNovelCache(novelId);
         deleteViewCountCache(novelId);
+        invalidateChapterCaches(novelId);
         
         // Invalidate popular caches
         Set<String> popularKeys = keys(POPULAR_PREFIX + "*");

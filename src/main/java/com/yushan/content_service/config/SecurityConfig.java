@@ -95,6 +95,33 @@ public class SecurityConfig {
                 // Admin endpoints - require admin role
                 .requestMatchers("/api/v1/novels/admin/**").hasRole("ADMIN")
                 
+                // Chapter APIs - following yushan-backend pattern
+                .requestMatchers(HttpMethod.POST, "/api/v1/chapters").hasAnyRole("AUTHOR","ADMIN")  // Create chapter
+                .requestMatchers(HttpMethod.POST, "/api/v1/chapters/batch").hasAnyRole("AUTHOR","ADMIN")  // Batch create chapters
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/*").permitAll()    // Get chapter by UUID
+                .requestMatchers(HttpMethod.PUT, "/api/v1/chapters").hasAnyRole("AUTHOR","ADMIN") // Update chapter
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/chapters/*").hasAnyRole("AUTHOR","ADMIN") // Delete chapter
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/chapters/publish").hasAnyRole("AUTHOR","ADMIN") // Publish chapter
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/chapters/novel/*/publish").hasAnyRole("AUTHOR","ADMIN") // Batch publish
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/chapters/novel/*").hasAnyRole("AUTHOR","ADMIN") // Delete all chapters
+                
+                // Public chapter endpoints
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/novel/*").permitAll() // Get chapters by novel
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/novel/*/number/*").permitAll() // Get chapter by novel ID and number
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/search").permitAll() // Search chapters
+                .requestMatchers(HttpMethod.POST, "/api/v1/chapters/*/view").permitAll() // Increment view
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/*/next").permitAll() // Get next chapter
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/*/previous").permitAll() // Get previous chapter
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/exists").permitAll() // Check chapter existence
+                
+                // Author-only chapter endpoints
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/novel/*/statistics").hasAnyRole("AUTHOR","ADMIN") // Get statistics
+                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/novel/*/next-number").hasAnyRole("AUTHOR","ADMIN") // Get next chapter number
+                
+                // Admin-only chapter endpoints
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/chapters/admin/*").hasRole("ADMIN") // Admin delete chapter
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/chapters/admin/novel/*").hasRole("ADMIN") // Admin delete all chapters
+                
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

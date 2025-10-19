@@ -1,5 +1,5 @@
 -- Create all tables for Content Service
--- This migration creates category and novel tables with all necessary indexes and constraints
+-- This migration creates category, novel, and chapter tables with all necessary indexes and constraints
 
 -- =============================================
 -- 1. CREATE CATEGORY TABLE
@@ -68,7 +68,33 @@ CREATE TABLE IF NOT EXISTS novel (
 );
 
 -- =============================================
--- 3. CREATE INDEXES FOR PERFORMANCE
+-- 3. CREATE CHAPTER TABLE
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS chapter (
+    id SERIAL PRIMARY KEY,
+    uuid UUID NOT NULL DEFAULT gen_random_uuid(),
+    novel_id INTEGER NOT NULL,
+    chapter_number INTEGER NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT,
+    word_cnt INTEGER DEFAULT 0,
+    is_premium BOOLEAN DEFAULT FALSE,
+    yuan_cost REAL DEFAULT 0.0,
+    view_cnt BIGINT DEFAULT 0,
+    is_valid BOOLEAN DEFAULT TRUE,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    publish_time TIMESTAMP,
+    
+    -- Constraints
+    CONSTRAINT fk_chapter_novel FOREIGN KEY (novel_id) REFERENCES novel(id) ON DELETE CASCADE,
+    CONSTRAINT unique_novel_chapter_number UNIQUE (novel_id, chapter_number),
+    CONSTRAINT unique_chapter_uuid UNIQUE (uuid)
+);
+
+-- =============================================
+-- 4. CREATE INDEXES FOR PERFORMANCE
 -- =============================================
 
 -- Category table indexes
@@ -94,8 +120,27 @@ CREATE INDEX IF NOT EXISTS idx_novel_status_category ON novel(status, category_i
 CREATE INDEX IF NOT EXISTS idx_novel_author_status ON novel(author_id, status);
 CREATE INDEX IF NOT EXISTS idx_novel_published_ranking ON novel(status, view_cnt DESC) WHERE status = 2;
 
+-- Chapter table indexes
+CREATE INDEX IF NOT EXISTS idx_chapter_novel_id ON chapter(novel_id);
+CREATE INDEX IF NOT EXISTS idx_chapter_uuid ON chapter(uuid);
+CREATE INDEX IF NOT EXISTS idx_chapter_number ON chapter(chapter_number);
+CREATE INDEX IF NOT EXISTS idx_chapter_title ON chapter(title);
+CREATE INDEX IF NOT EXISTS idx_chapter_is_valid ON chapter(is_valid);
+CREATE INDEX IF NOT EXISTS idx_chapter_is_premium ON chapter(is_premium);
+CREATE INDEX IF NOT EXISTS idx_chapter_create_time ON chapter(create_time);
+CREATE INDEX IF NOT EXISTS idx_chapter_update_time ON chapter(update_time);
+CREATE INDEX IF NOT EXISTS idx_chapter_publish_time ON chapter(publish_time);
+CREATE INDEX IF NOT EXISTS idx_chapter_view_cnt ON chapter(view_cnt);
+CREATE INDEX IF NOT EXISTS idx_chapter_word_cnt ON chapter(word_cnt);
+
+-- Create composite indexes for common queries
+CREATE INDEX IF NOT EXISTS idx_chapter_novel_valid ON chapter(novel_id, is_valid);
+CREATE INDEX IF NOT EXISTS idx_chapter_novel_published ON chapter(novel_id, is_valid, publish_time) WHERE is_valid = true;
+CREATE INDEX IF NOT EXISTS idx_chapter_novel_number ON chapter(novel_id, chapter_number);
+CREATE INDEX IF NOT EXISTS idx_chapter_published_ranking ON chapter(novel_id, view_cnt DESC) WHERE is_valid = true;
+
 -- =============================================
--- 4. ADD COMMENTS FOR DOCUMENTATION
+-- 5. ADD COMMENTS FOR DOCUMENTATION
 -- =============================================
 
 COMMENT ON TABLE novel IS 'Stores novel information including metadata, statistics, and publishing status';
@@ -120,8 +165,24 @@ COMMENT ON COLUMN novel.create_time IS 'When the novel was created';
 COMMENT ON COLUMN novel.update_time IS 'When the novel was last updated';
 COMMENT ON COLUMN novel.publish_time IS 'When the novel was published (status changed to PUBLISHED)';
 
+COMMENT ON TABLE chapter IS 'Stores chapter information including content, metadata, and publishing status';
+COMMENT ON COLUMN chapter.id IS 'Primary key - auto-incrementing integer';
+COMMENT ON COLUMN chapter.uuid IS 'Unique identifier for external references';
+COMMENT ON COLUMN chapter.novel_id IS 'Foreign key to novel table - parent novel';
+COMMENT ON COLUMN chapter.chapter_number IS 'Chapter number within the novel (1-based)';
+COMMENT ON COLUMN chapter.title IS 'Title of the chapter';
+COMMENT ON COLUMN chapter.content IS 'Full text content of the chapter';
+COMMENT ON COLUMN chapter.word_cnt IS 'Word count of the chapter content';
+COMMENT ON COLUMN chapter.is_premium IS 'Whether this is a premium chapter requiring payment';
+COMMENT ON COLUMN chapter.yuan_cost IS 'Cost in yuan for premium chapters';
+COMMENT ON COLUMN chapter.view_cnt IS 'Total view count for this chapter';
+COMMENT ON COLUMN chapter.is_valid IS 'Whether the chapter is published/visible (soft delete flag)';
+COMMENT ON COLUMN chapter.create_time IS 'When the chapter was created';
+COMMENT ON COLUMN chapter.update_time IS 'When the chapter was last updated';
+COMMENT ON COLUMN chapter.publish_time IS 'When the chapter was/will be published (for scheduling)';
+
 -- =============================================
--- 5. INSERT SAMPLE DATA FOR TESTING
+-- 6. INSERT SAMPLE DATA FOR TESTING
 -- =============================================
 
 -- Insert sample novels for testing APIs
