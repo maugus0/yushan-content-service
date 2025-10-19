@@ -225,3 +225,40 @@ INSERT INTO novel (
 (gen_random_uuid(), 'Funny Farm', '550e8400-e29b-41d4-a716-446655440008', 'Comedy Writer', 8, 'A comedy about life on a quirky farm', 0, false, 5, 50000, 0.0, 0, 0, 0, 0.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
 
 ON CONFLICT (uuid) DO NOTHING;
+
+-- =============================================
+-- 7. INSERT SAMPLE CHAPTERS FOR TESTING
+-- =============================================
+
+-- Insert sample chapters for "The Dragon Chronicles" (novel_id = 1)
+INSERT INTO chapter (
+    uuid, novel_id, chapter_number, title, content, word_cnt, 
+    is_premium, yuan_cost, view_cnt, is_valid, 
+    create_time, update_time, publish_time
+) VALUES 
+-- Chapter 1: The Beginning
+(gen_random_uuid(), 1, 1, 'The Prophecy', 
+'In the ancient kingdom of Eldoria, where magic flowed like rivers and dragons soared through the clouds, a prophecy had been foretold for centuries. The old seer, Master Elrond, had spoken of a chosen one who would unite the realms and bring peace to the warring lands. As the sun set behind the towering mountains, casting long shadows across the valley, a young mage named Aria stood at the edge of the cliff, her silver hair dancing in the wind. She could feel the ancient power coursing through her veins, a power that had been dormant for years but was now awakening. The time had come for the prophecy to unfold, and she was at its center.', 
+1200, false, 0.0, 150, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+-- Chapter 2: The Discovery
+(gen_random_uuid(), 1, 2, 'The Hidden Cave', 
+'Aria had always been drawn to the mysterious cave hidden behind the waterfall near her village. The elders had warned her to stay away, speaking of ancient curses and dangerous creatures that lurked within. But something called to her, a voice that seemed to echo from the depths of the earth itself. As she stepped through the cascading water, the cave revealed its secrets. Glowing crystals lined the walls, pulsing with an otherworldly light. In the center of the chamber stood an ancient altar, carved with symbols that seemed to shift and move in the flickering light. Aria reached out to touch the cold stone, and suddenly, the entire cave was filled with a brilliant golden light. The prophecy was beginning to take shape.', 
+1150, false, 0.0, 120, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+-- Chapter 3: The Dragon''s Call
+(gen_random_uuid(), 1, 3, 'Meeting the Guardian', 
+'The golden light faded, and Aria found herself standing in a vast chamber that seemed to stretch into infinity. Before her stood the most magnificent creature she had ever seen - a dragon with scales that shimmered like liquid gold and eyes that held the wisdom of ages. "I have been waiting for you, young one," the dragon spoke, its voice like rolling thunder. "I am Valdris, Guardian of the Ancient Powers. The prophecy speaks of your coming, but the path ahead will not be easy. Dark forces gather in the shadows, seeking to prevent the fulfillment of the ancient words." Aria felt both fear and determination coursing through her. She had always known she was different, but now she understood the true weight of her destiny.', 
+1180, false, 0.0, 135, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+-- Chapter 4: The First Trial
+(gen_random_uuid(), 1, 4, 'The Test of Courage', 
+'Valdris led Aria to a chamber filled with floating platforms that seemed to exist in mid-air. "To prove yourself worthy of the ancient powers, you must complete three trials," the dragon explained. "The first is the Test of Courage. You must cross these platforms without falling into the abyss below. But beware - the platforms will shift and move, testing not just your physical abilities, but your inner strength as well." Aria took a deep breath and stepped onto the first platform. As soon as her foot touched the surface, the entire chamber began to move. Platforms rose and fell, twisted and turned, creating a maze that seemed impossible to navigate. But Aria focused her mind and let her instincts guide her, leaping from platform to platform with growing confidence.', 
+1220, false, 0.0, 110, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+-- Chapter 5: The Awakening
+(gen_random_uuid(), 1, 5, 'Power Unleashed', 
+'As Aria completed the final leap across the platforms, she felt something incredible happening within her. The dormant power that had been sleeping in her veins suddenly erupted, filling her entire being with a warmth and strength she had never known. Her hands glowed with a soft blue light, and she could feel the very air around her responding to her presence. "Excellent," Valdris said with approval. "You have passed the first trial. Your powers are awakening, but this is only the beginning. The dark sorcerer Malachar has learned of your existence and will stop at nothing to prevent you from fulfilling the prophecy. You must be ready for the battles ahead." Aria nodded, feeling both the weight of responsibility and the thrill of her newfound abilities. The journey was just beginning, and she was ready to face whatever challenges lay ahead.', 
+1190, false, 0.0, 125, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+
+ON CONFLICT (uuid) DO NOTHING;
