@@ -290,6 +290,7 @@
         select count(*)
         from chapter
         where novel_id = #{novelId,jdbcType=INTEGER}
+        and is_valid = true
     </select>
     
     <select id="countPublishedByNovelId" resultType="long" >
@@ -409,6 +410,14 @@
         from chapter
         where novel_id = #{novelId,jdbcType=INTEGER}
         and is_valid = true
+    </select>
+    
+    <select id="sumPublishedWordCountByNovelId" resultType="long" >
+        select COALESCE(sum(word_cnt), 0)
+        from chapter
+        where novel_id = #{novelId,jdbcType=INTEGER}
+        and is_valid = true
+        and publish_time &lt;= NOW()
     </select>
     
     <!-- Bulk status updates -->

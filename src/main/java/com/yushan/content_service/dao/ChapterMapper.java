@@ -86,6 +86,7 @@ public interface ChapterMapper {
     
     // Statistics
     long sumWordCountByNovelId(@Param("novelId") Integer novelId);
+    long sumPublishedWordCountByNovelId(@Param("novelId") Integer novelId);
     
     // Bulk status updates
     int updatePublishStatusByIds(@Param("ids") List<Integer> ids,

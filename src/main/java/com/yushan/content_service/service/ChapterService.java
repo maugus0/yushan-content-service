@@ -451,6 +451,9 @@ public class ChapterService {
 
         chapterMapper.updateByPrimaryKeySelective(chapter);
 
+        // Update novel statistics
+        updateNovelStatistics(chapter.getNovelId());
+
         // Invalidate chapter caches
         redisUtil.deleteChapterCache(req.getUuid());
         redisUtil.deleteChapterCacheByNovelAndNumber(chapter.getNovelId(), chapter.getChapterNumber());
@@ -484,6 +487,9 @@ public class ChapterService {
 
         if (!ids.isEmpty()) {
             chapterMapper.updatePublishStatusByIds(ids, isValid);
+            
+            // Update novel statistics
+            updateNovelStatistics(novelId);
             
             // Invalidate chapter caches for this novel
             redisUtil.invalidateChapterCaches(novelId);
@@ -592,12 +598,13 @@ public class ChapterService {
     /**
      * Update novel's chapter count and word count statistics
      * Called after chapter creation, update, or deletion
+     * Only counts published chapters (is_valid = true and publish_time <= NOW())
      */
     @Transactional
     public void updateNovelStatistics(Integer novelId) {
-        // Count only valid (non-deleted) chapters
+        // Count only published chapters (is_valid = true and publish_time <= NOW())
         long chapterCount = chapterMapper.countPublishedByNovelId(novelId);
-        long wordCount = chapterMapper.sumWordCountByNovelId(novelId);
+        long wordCount = chapterMapper.sumPublishedWordCountByNovelId(novelId);
 
         // Use NovelService to update statistics
         novelService.updateNovelStatistics(novelId, (int) chapterCount, wordCount);
