@@ -20,7 +20,7 @@ public class ImageValidationService {
     private static final String[] SUPPORTED_FORMATS = {"jpeg", "jpg", "png", "gif", "webp"};
     
     // Image size limits
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024; // 10MB
     private static final int MAX_WIDTH = 10000;
     private static final int MAX_HEIGHT = 10000;
     private static final int MIN_WIDTH = 1;

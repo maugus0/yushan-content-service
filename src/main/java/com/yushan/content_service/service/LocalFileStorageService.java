@@ -176,7 +176,12 @@ public class LocalFileStorageService implements FileStorageService {
         try {
             Path coversDir = Paths.get(uploadPath, COVERS_DIR);
             
-            long coversCount = Files.exists(coversDir) ? Files.list(coversDir).count() : 0;
+            long coversCount = 0;
+            if (Files.exists(coversDir)) {
+                try (var stream = Files.list(coversDir)) {
+                    coversCount = stream.count();
+                }
+            }
             
             stats.put("coversCount", coversCount);
             stats.put("totalFiles", coversCount);
