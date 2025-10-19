@@ -349,25 +349,18 @@ public class NovelController {
 
     /**
      * Batch get novels by IDs
-     * GET /api/v1/novels/batch?ids=1,2,3
+     * POST /api/v1/novels/batch/get
      */
-    @GetMapping("/batch")
+    @PostMapping("/batch/get")
     @Operation(summary = "[PUBLIC] Batch get novels by IDs", description = "Retrieves multiple novels by their IDs in a single request.")
     public ApiResponse<List<NovelDetailResponseDTO>> getNovelsByIds(
-            @RequestParam(value = "ids", required = false) String ids) {
+            @RequestBody List<Integer> novelIds) {
         // Handle empty or null IDs
-        if (ids == null || ids.trim().isEmpty()) {
+        if (novelIds == null || novelIds.isEmpty()) {
             return ApiResponse.success("Novels retrieved successfully", new ArrayList<>());
         }
-        
-        // Parse comma-separated IDs
-        List<Integer> idList = Arrays.stream(ids.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isEmpty())
-            .map(Integer::parseInt)
-            .collect(Collectors.toList());
             
-        List<NovelDetailResponseDTO> novels = novelService.getNovelsByIds(idList);
+        List<NovelDetailResponseDTO> novels = novelService.getNovelsByIds(novelIds);
         return ApiResponse.success("Novels retrieved successfully", novels);
     }
 

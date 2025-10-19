@@ -330,25 +330,18 @@ public class ChapterController {
 
     /**
      * Batch get chapters by IDs
-     * GET /api/v1/chapters/batch?ids=1,2,3
+     * POST /api/v1/chapters/batch/get
      */
-    @GetMapping("/batch")
+    @PostMapping("/batch/get")
     @Operation(summary = "[PUBLIC] Batch get chapters by IDs", description = "Retrieves multiple chapters by their IDs in a single request.")
     public ApiResponse<List<ChapterDetailResponseDTO>> getChaptersByIds(
-            @RequestParam(value = "ids", required = false) String ids) {
+            @RequestBody List<Integer> chapterIds) {
         // Handle empty or null IDs
-        if (ids == null || ids.trim().isEmpty()) {
+        if (chapterIds == null || chapterIds.isEmpty()) {
             return ApiResponse.success("Chapters retrieved successfully", new ArrayList<>());
         }
-        
-        // Parse comma-separated IDs
-        List<Integer> idList = Arrays.stream(ids.split(","))
-            .map(String::trim)
-            .filter(s -> !s.isEmpty())
-            .map(Integer::parseInt)
-            .collect(Collectors.toList());
             
-        List<ChapterDetailResponseDTO> chapters = chapterService.getChaptersByIds(idList);
+        List<ChapterDetailResponseDTO> chapters = chapterService.getChaptersByIds(chapterIds);
         return ApiResponse.success("Chapters retrieved successfully", chapters);
     }
 

@@ -91,7 +91,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/category/**").permitAll() // Get by category
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/uuid/**").permitAll() // Get by UUID
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/author/**").permitAll() // Get by author
-                .requestMatchers(HttpMethod.GET, "/api/v1/novels/batch").permitAll() // Batch get by IDs
+                .requestMatchers(HttpMethod.POST, "/api/v1/novels/batch/get").permitAll() // Batch get by IDs
                 
                 // Admin endpoints - require admin role
                 .requestMatchers("/api/v1/novels/admin/**").hasRole("ADMIN")
@@ -110,7 +110,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/chapters/novel/*").permitAll() // Get chapters by novel
                 .requestMatchers(HttpMethod.GET, "/api/v1/chapters/novel/*/number/*").permitAll() // Get chapter by novel ID and number
                 .requestMatchers(HttpMethod.GET, "/api/v1/chapters/search").permitAll() // Search chapters
-                .requestMatchers(HttpMethod.GET, "/api/v1/chapters/batch").permitAll() // Batch get by IDs
+                .requestMatchers(HttpMethod.POST, "/api/v1/chapters/batch/get").permitAll() // Batch get by IDs
                 .requestMatchers(HttpMethod.POST, "/api/v1/chapters/*/view").permitAll() // Increment view
                 .requestMatchers(HttpMethod.GET, "/api/v1/chapters/*/next").permitAll() // Get next chapter
                 .requestMatchers(HttpMethod.GET, "/api/v1/chapters/*/previous").permitAll() // Get previous chapter
