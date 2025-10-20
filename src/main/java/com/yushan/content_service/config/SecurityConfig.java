@@ -92,6 +92,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/uuid/**").permitAll() // Get by UUID
                 .requestMatchers(HttpMethod.GET, "/api/v1/novels/author/**").permitAll() // Get by author
                 .requestMatchers(HttpMethod.POST, "/api/v1/novels/batch/get").permitAll() // Batch get by IDs
+                .requestMatchers(HttpMethod.GET, "/api/v1/novels/*/vote-count").permitAll() // Get vote count
+                
+                // Authenticated novel endpoints
+                .requestMatchers(HttpMethod.POST, "/api/v1/novels/*/vote").authenticated() // Increment vote
+                .requestMatchers(HttpMethod.PUT, "/api/v1/novels/*/rating").authenticated() // Update rating
                 
                 // Admin endpoints - require admin role
                 .requestMatchers("/api/v1/novels/admin/**").hasRole("ADMIN")

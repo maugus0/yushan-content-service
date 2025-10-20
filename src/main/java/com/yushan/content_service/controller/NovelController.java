@@ -363,6 +363,43 @@ public class NovelController {
     }
 
     /**
+     * Get novel vote count
+     * GET /api/v1/novels/{id}/vote-count
+     */
+    @GetMapping("/{id}/vote-count")
+    @Operation(summary = "[PUBLIC] Get novel vote count", description = "Gets the current vote count for a novel.")
+    public ApiResponse<Integer> getNovelVoteCount(@PathVariable Integer id) {
+        Integer voteCount = novelService.getNovelVoteCount(id);
+        return ApiResponse.success("Vote count retrieved successfully", voteCount);
+    }
+
+    /**
+     * Increment vote count
+     * POST /api/v1/novels/{id}/vote
+     */
+    @PostMapping("/{id}/vote")
+    @Operation(summary = "[AUTHENTICATED] Increment vote count", description = "Increments the vote count for a novel. Requires authentication.")
+    public ApiResponse<String> incrementVoteCount(@PathVariable Integer id) {
+        novelService.incrementVoteCount(id);
+        return ApiResponse.success("Vote count incremented successfully");
+    }
+
+    /**
+     * Update novel rating and review count
+     * PUT /api/v1/novels/{id}/rating
+     */
+    @PutMapping("/{id}/rating")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "[AUTHENTICATED] Update novel rating and review count", description = "Updates the average rating and review count for a novel. Requires authentication.")
+    public ApiResponse<String> updateNovelRatingAndCount(
+            @PathVariable Integer id,
+            @RequestParam Float avgRating,
+            @RequestParam Integer reviewCount) {
+        novelService.updateNovelRatingAndCount(id, avgRating, reviewCount);
+        return ApiResponse.success("Novel rating and review count updated successfully");
+    }
+
+    /**
      * Helper method to get client IP address
      */
     private String getClientIpAddress(HttpServletRequest request) {

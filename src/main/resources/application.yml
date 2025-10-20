@@ -135,8 +135,8 @@ management:
 
 # JWT Configuration
 jwt:
-  secret: "yushan-content-service-secret-key-for-jwt-token-generation-and-validation-2024"
-  issuer: "yushan-content-service"
+  secret: "yushan-micro-service-secret-key-for-jwt-token-generation-and-validation-2024"
+  issuer: "yushan-micro-service"
   algorithm: "HS256"
 
 # File Storage Configuration

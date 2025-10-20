@@ -497,6 +497,64 @@ public class NovelService {
     }
 
     /**
+     * Get novel vote count
+     */
+    public Integer getNovelVoteCount(Integer novelId) {
+        Novel novel = novelMapper.selectByPrimaryKey(novelId);
+        if (novel == null) {
+            throw new ResourceNotFoundException("novel not found");
+        }
+        return novel.getVoteCnt();
+    }
+
+    /**
+     * Increment vote count for a novel
+     */
+    @Transactional
+    public void incrementVoteCount(Integer novelId) {
+        // Check if novel exists and is not archived
+        Novel novel = novelMapper.selectByPrimaryKey(novelId);
+        if (novel == null) {
+            throw new ResourceNotFoundException("novel not found");
+        }
+        if (novel.getStatus().equals(NovelStatus.ARCHIVED.getValue())) {
+            throw new ResourceNotFoundException("novel not found");
+        }
+        
+        // Increment vote count in database
+        novelMapper.incrementVoteCount(novelId);
+        
+        // Get updated novel data from database to ensure consistency
+        Novel updatedNovel = novelMapper.selectByPrimaryKey(novelId);
+        
+        // Cache the updated novel data
+        redisUtil.cacheNovel(novelId, updatedNovel);
+    }
+
+    /**
+     * Update novel's average rating and review count
+     * This method is called by ReviewService when reviews are created/updated/deleted
+     */
+    @Transactional
+    public void updateNovelRatingAndCount(Integer novelId, Float avgRating, Integer reviewCount) {
+        Novel novel = novelMapper.selectByPrimaryKey(novelId);
+        if (novel == null) {
+            return; // Novel not found, skip update
+        }
+
+        // Update novel statistics with provided values
+        novel.setAvgRating(avgRating);
+        novel.setReviewCnt(reviewCount);
+        
+        // Update timestamp
+        novel.setUpdateTime(new Date());
+        novelMapper.updateByPrimaryKeySelective(novel);
+        
+        // Cache the updated novel data
+        redisUtil.cacheNovel(novelId, novel);
+    }
+
+    /**
      * Submit novel for review (Author only)
      */
     public NovelDetailResponseDTO submitForReview(Integer novelId, UUID userId) {
