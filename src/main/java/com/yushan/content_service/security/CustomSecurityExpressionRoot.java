@@ -2,6 +2,8 @@ package com.yushan.content_service.security;
 
 import org.springframework.security.access.expression.SecurityExpressionRoot;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -14,9 +16,11 @@ public class CustomSecurityExpressionRoot extends SecurityExpressionRoot impleme
 
     private Object filterObject;
     private Object returnObject;
+    private AuthenticationTrustResolver trustResolver = new AuthenticationTrustResolverImpl();
 
     public CustomSecurityExpressionRoot(Authentication authentication) {
         super(authentication);
+        setTrustResolver(trustResolver);
     }
 
     /**
