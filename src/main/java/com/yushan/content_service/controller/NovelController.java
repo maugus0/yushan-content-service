@@ -73,7 +73,7 @@ public class NovelController {
         // Get user information from JWT token
         CustomUserDetails userDetails = getCurrentUser();
         UUID userId = UUID.fromString(userDetails.getUserId());
-        String authorName = userDetails.getEmail(); // Use email as author name for now
+        String authorName = userDetails.getDisplayUsername(); // Use username as author name
         
         NovelDetailResponseDTO novel = novelService.createNovel(userId, authorName, request);
         return ApiResponse.success("Novel created successfully", novel);

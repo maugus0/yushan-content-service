@@ -17,6 +17,7 @@ public class TestSecurityContextConfig {
         CustomUserDetails userDetails = new CustomUserDetails(
             UUID.fromString("550e8400-e29b-41d4-a716-446655440001").toString(),
             "test@example.com",
+            "test_user", // Add username
             "AUTHOR",
             0
         );

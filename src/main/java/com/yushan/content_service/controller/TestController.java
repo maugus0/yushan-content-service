@@ -28,6 +28,7 @@ public class TestController {
         Map<String, String> response = new HashMap<>();
         response.put("token", jwtTestUtil.generateTestAuthorToken());
         response.put("role", "AUTHOR");
+        response.put("username", "test_author");
         response.put("message", "Use this token in Authorization header: Bearer <token>");
         return response;
     }
@@ -40,6 +41,7 @@ public class TestController {
         Map<String, String> response = new HashMap<>();
         response.put("token", jwtTestUtil.generateTestAdminToken());
         response.put("role", "ADMIN");
+        response.put("username", "test_admin");
         response.put("message", "Use this token in Authorization header: Bearer <token>");
         return response;
     }
@@ -52,6 +54,7 @@ public class TestController {
         Map<String, String> response = new HashMap<>();
         response.put("token", jwtTestUtil.generateTestSuspendedToken());
         response.put("role", "AUTHOR (SUSPENDED)");
+        response.put("username", "test_suspended");
         response.put("message", "This token should be rejected due to suspended status");
         return response;
     }

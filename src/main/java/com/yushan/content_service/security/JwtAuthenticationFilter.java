@@ -51,13 +51,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 2. Extract user information from token
                 String userId = jwtUtil.extractUserId(token);
                 String email = jwtUtil.extractEmail(token);
+                String username = jwtUtil.extractUsername(token);
                 String role = jwtUtil.extractRole(token);
                 Integer status = jwtUtil.extractStatus(token);
                 
                 // 3. Check if user is not already authenticated
                 if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     // 4. Create CustomUserDetails from JWT claims
-                    CustomUserDetails userDetails = new CustomUserDetails(userId, email, role, status);
+                    CustomUserDetails userDetails = new CustomUserDetails(userId, email, username, role, status);
                     
                     // 4.5. Check if user is enabled (not suspended/banned)
                     if (!userDetails.isEnabled()) {

@@ -78,6 +78,16 @@ public class JwtUtil {
         return extractClaim(token, claims -> claims.get("status", Integer.class));
     }
 
+    /**
+     * Extract username from JWT token
+     * 
+     * @param token JWT token
+     * @return Username from token claims
+     */
+    public String extractUsername(String token) {
+        return extractClaim(token, claims -> claims.get("username", String.class));
+    }
+
 
     /**
      * Extract token type from JWT token

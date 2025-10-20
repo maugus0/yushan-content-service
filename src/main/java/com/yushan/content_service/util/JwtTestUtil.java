@@ -39,6 +39,7 @@ public class JwtTestUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", "550e8400-e29b-41d4-a716-446655440001");
         claims.put("email", "author@test.com");
+        claims.put("username", "test_author");
         claims.put("role", "AUTHOR");
         claims.put("status", 0); // NORMAL
         claims.put("tokenType", "access");
@@ -53,6 +54,7 @@ public class JwtTestUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", "550e8400-e29b-41d4-a716-446655440002");
         claims.put("email", "admin@test.com");
+        claims.put("username", "test_admin");
         claims.put("role", "ADMIN");
         claims.put("status", 0); // NORMAL
         claims.put("tokenType", "access");
@@ -67,6 +69,7 @@ public class JwtTestUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", "550e8400-e29b-41d4-a716-446655440003");
         claims.put("email", "suspended@test.com");
+        claims.put("username", "test_suspended");
         claims.put("role", "AUTHOR");
         claims.put("status", 1); // SUSPENDED
         claims.put("tokenType", "access");

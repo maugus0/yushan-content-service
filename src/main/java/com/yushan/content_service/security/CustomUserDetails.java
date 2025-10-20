@@ -19,12 +19,14 @@ public class CustomUserDetails implements UserDetails {
 
     private final String userId;
     private final String email;
+    private final String username;
     private final String role;
     private final Integer status;
 
     public CustomUserDetails(String userId, String email, String role) {
         this.userId = userId;
         this.email = email;
+        this.username = null; // Username not provided in old constructor
         this.role = role;
         this.status = 0; // Default to NORMAL status
     }
@@ -32,6 +34,15 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(String userId, String email, String role, Integer status) {
         this.userId = userId;
         this.email = email;
+        this.username = null; // Username not provided in old constructor
+        this.role = role;
+        this.status = status;
+    }
+
+    public CustomUserDetails(String userId, String email, String username, String role, Integer status) {
+        this.userId = userId;
+        this.email = email;
+        this.username = username;
         this.role = role;
         this.status = status;
     }
@@ -98,6 +109,15 @@ public class CustomUserDetails implements UserDetails {
      */
     public String getEmail() {
         return email;
+    }
+
+    /**
+     * Get username
+     * 
+     * @return Username, fallback to email if username is null
+     */
+    public String getDisplayUsername() {
+        return username != null ? username : email;
     }
 
     /**
