@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("integration-test")
 @Import(TestcontainersConfiguration.class)
 @Transactional
+@TestPropertySource(properties = {
+    "spring.kafka.bootstrap-servers=",
+    "spring.kafka.enabled=false",
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
+})
 @org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "CI", matches = "true")
 public class ChapterIntegrationTest {
 
@@ -54,6 +60,10 @@ public class ChapterIntegrationTest {
 
     @MockBean
     private KafkaEventProducerService kafkaEventProducerService;
+    
+    // Mock KafkaTemplate to prevent actual Kafka connection
+    @MockBean
+    private org.springframework.kafka.core.KafkaTemplate<String, Object> kafkaTemplate;
     
     // Mock Elasticsearch services
     @MockBean

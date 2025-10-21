@@ -11,11 +11,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("integration-test")
 @Import(TestcontainersConfiguration.class)
 @Transactional
+@TestPropertySource(properties = {
+    "spring.kafka.bootstrap-servers=",
+    "spring.kafka.enabled=false",
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
+})
 @org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "CI", matches = "true")
 public class CategoryIntegrationTest {
 
@@ -47,6 +54,13 @@ public class CategoryIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private com.yushan.content_service.service.KafkaEventProducerService kafkaEventProducerService;
+    
+    // Mock KafkaTemplate to prevent actual Kafka connection
+    @MockBean
+    private org.springframework.kafka.core.KafkaTemplate<String, Object> kafkaTemplate;
 
     private MockMvc mockMvc;
     private String adminToken;
