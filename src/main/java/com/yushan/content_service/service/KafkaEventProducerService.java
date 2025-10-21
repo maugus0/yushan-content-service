@@ -306,6 +306,19 @@ public class KafkaEventProducerService {
     }
 
     /**
+     * Publish user activity event
+     */
+    public void publishUserActivityEvent(UserActivityEvent event) {
+        try {
+            publishEvent("active", event.userId().toString(), event);
+            log.info("Published user activity event for user: {}, service: {}, endpoint: {}", 
+                     event.userId(), event.serviceName(), event.endpoint());
+        } catch (Exception e) {
+            log.error("Failed to publish user activity event for user: {}", event.userId(), e);
+        }
+    }
+
+    /**
      * Generic method to publish events to Kafka
      */
     private void publishEvent(String topic, String key, Object event) {

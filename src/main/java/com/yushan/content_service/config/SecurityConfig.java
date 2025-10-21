@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.yushan.content_service.security.CustomMethodSecurityExpressionHandler;
 import com.yushan.content_service.security.JwtAuthenticationEntryPoint;
 import com.yushan.content_service.security.JwtAuthenticationFilter;
+import com.yushan.content_service.security.UserActivityFilter;
 
 /**
  * Security Configuration for Content Service.
@@ -30,6 +31,9 @@ public class SecurityConfig {
     
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Autowired
+    private UserActivityFilter userActivityFilter;
 
     /**
      * Security filter chain configuration
@@ -142,7 +146,10 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable())
             
             // Add JWT filter before UsernamePasswordAuthenticationFilter
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            
+            // Add user activity filter after JWT filter
+            .addFilterAfter(userActivityFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
