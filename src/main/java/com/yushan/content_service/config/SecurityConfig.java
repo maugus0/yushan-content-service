@@ -100,6 +100,7 @@ public class SecurityConfig {
                 
                 // Admin endpoints - require admin role
                 .requestMatchers("/api/v1/novels/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/novels/*/unarchive").hasRole("ADMIN") // Unarchive novel
                 
                 // Search APIs - public read access
                 .requestMatchers(HttpMethod.GET, "/api/v1/search/**").permitAll()

@@ -800,6 +800,37 @@ public class NovelService {
     }
 
     /**
+     * Unarchive novel (change status from ARCHIVED to DRAFT)
+     * Only admin can perform this operation
+     */
+    @Transactional
+    public NovelDetailResponseDTO unarchiveNovel(Integer id) {
+        Novel existing = novelMapper.selectByPrimaryKey(id);
+        if (existing == null) {
+            throw new ResourceNotFoundException("Novel not found with id: " + id);
+        }
+        
+        // Check if novel is currently archived
+        if (!existing.getStatus().equals(NovelStatus.ARCHIVED.getValue())) {
+            throw new IllegalArgumentException("Only archived novels can be unarchived. Current status: " + 
+                NovelStatus.fromValue(existing.getStatus()).getDescription());
+        }
+
+        // Change status from ARCHIVED to DRAFT
+        existing.setStatus(NovelStatus.DRAFT.getValue());
+        existing.setUpdateTime(new Date());
+        novelMapper.updateByPrimaryKeySelective(existing);
+
+        // Invalidate all caches since novel status changed
+        redisUtil.invalidateNovelCaches(id);
+
+        // Note: We don't auto-index to Elasticsearch here since DRAFT novels are not searchable
+        // The novel will be indexed when it's published
+
+        return toResponse(existing);
+    }
+
+    /**
      * Convert Base64 data URL to a regular URL
      */
     private String convertBase64ToUrl(String base64DataUrl) {

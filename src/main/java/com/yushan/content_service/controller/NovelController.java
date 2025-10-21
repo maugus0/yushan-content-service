@@ -141,6 +141,18 @@ public class NovelController {
     }
 
     /**
+     * Unarchive novel (change from ARCHIVED to DRAFT)
+     * POST /api/v1/novels/{id}/unarchive
+     */
+    @PostMapping("/{id}/unarchive")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "[ADMIN] Unarchive novel", description = "Unarchives a novel by changing its status from ARCHIVED to DRAFT. Only admin can perform this operation.")
+    public ApiResponse<NovelDetailResponseDTO> unarchiveNovel(@PathVariable Integer id) {
+        NovelDetailResponseDTO novel = novelService.unarchiveNovel(id);
+        return ApiResponse.success("Novel unarchived successfully and returned to draft", novel);
+    }
+
+    /**
      * Increment view count
      * POST /api/v1/novels/{id}/view
      */
