@@ -352,6 +352,301 @@ public class NovelServiceTest {
         verify(kafkaEventProducerService).publishNovelViewEvent(any(Novel.class), eq(userId), eq(userAgent), eq(ipAddress), isNull());
     }
 
+    @Test
+    void getNovelByUuid_WithValidUuid_ShouldReturnNovel() {
+        // Arrange
+        UUID novelUuid = UUID.randomUUID();
+        Novel novel = new Novel();
+        novel.setId(1);
+        novel.setUuid(novelUuid);
+        novel.setTitle("Test Novel");
+        novel.setStatus(0); // DRAFT
+
+        when(novelMapper.selectByUuid(novelUuid)).thenReturn(novel);
+
+        // Act
+        NovelDetailResponseDTO result = novelService.getNovelByUuid(novelUuid);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(novelUuid, result.getUuid());
+        assertEquals("Test Novel", result.getTitle());
+        assertEquals("DRAFT", result.getStatus());
+
+        verify(novelMapper).selectByUuid(novelUuid);
+    }
+
+    @Test
+    void getNovelByUuid_WithInvalidUuid_ShouldThrowException() {
+        // Arrange
+        UUID novelUuid = UUID.randomUUID();
+        when(novelMapper.selectByUuid(novelUuid)).thenReturn(null);
+
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> novelService.getNovelByUuid(novelUuid));
+        verify(novelMapper).selectByUuid(novelUuid);
+    }
+
+    @Test
+    void archiveNovel_WithValidId_ShouldArchiveNovel() {
+        // Arrange
+        Integer novelId = 1;
+        Novel novel = new Novel();
+        novel.setId(novelId);
+        novel.setTitle("Test Novel");
+        novel.setStatus(0); // DRAFT
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+        when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        doNothing().when(redisUtil).invalidateNovelCaches(novelId);
+
+        // Act
+        NovelDetailResponseDTO result = novelService.archiveNovel(novelId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("ARCHIVED", result.getStatus());
+        verify(novelMapper).selectByPrimaryKey(novelId);
+        verify(novelMapper).updateByPrimaryKeySelective(any(Novel.class));
+        verify(redisUtil).invalidateNovelCaches(novelId);
+    }
+
+    @Test
+    void rejectNovel_WithUnderReviewNovel_ShouldUpdateToDraft() {
+        // Arrange
+        Integer novelId = 1;
+        Novel novel = new Novel();
+        novel.setId(novelId);
+        novel.setStatus(1); // UNDER_REVIEW
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+        when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        doNothing().when(redisUtil).invalidateNovelCaches(novelId);
+        doNothing().when(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
+
+        // Act
+        NovelDetailResponseDTO result = novelService.rejectNovel(novelId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("DRAFT", result.getStatus());
+        verify(novelMapper).selectByPrimaryKey(novelId);
+        verify(novelMapper).updateByPrimaryKeySelective(any(Novel.class));
+    }
+
+    @Test
+    void unhideNovel_WithHiddenNovel_ShouldUpdateToPublished() {
+        // Arrange
+        Integer novelId = 1;
+        Novel novel = new Novel();
+        novel.setId(novelId);
+        novel.setStatus(3); // HIDDEN
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+        when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        doNothing().when(redisUtil).invalidateNovelCaches(novelId);
+        doNothing().when(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
+
+        // Act
+        NovelDetailResponseDTO result = novelService.unhideNovel(novelId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("PUBLISHED", result.getStatus());
+        verify(novelMapper).selectByPrimaryKey(novelId);
+        verify(novelMapper).updateByPrimaryKeySelective(any(Novel.class));
+    }
+
+    @Test
+    void getNovelsByAuthor_ShouldReturnAuthorNovels() {
+        // Arrange
+        UUID authorId = UUID.randomUUID();
+        List<Novel> novels = Arrays.asList(
+            createTestNovel(1, "Novel 1"),
+            createTestNovel(2, "Novel 2")
+        );
+
+        when(novelMapper.selectNovelsWithPagination(any())).thenReturn(novels);
+        when(categoryService.getCategoryMapByIds(any())).thenReturn(java.util.Map.of(1, "Test Category"));
+
+        // Act
+        List<NovelDetailResponseDTO> result = novelService.getNovelsByAuthor(authorId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(novelMapper).selectNovelsWithPagination(any());
+    }
+
+    @Test
+    void getNovelsByCategory_ShouldReturnCategoryNovels() {
+        // Arrange
+        Integer categoryId = 1;
+        List<Novel> novels = Arrays.asList(
+            createTestNovel(1, "Novel 1"),
+            createTestNovel(2, "Novel 2")
+        );
+
+        when(novelMapper.selectNovelsWithPagination(any())).thenReturn(novels);
+        when(categoryService.getCategoryMapByIds(any())).thenReturn(java.util.Map.of(1, "Test Category"));
+
+        // Act
+        List<NovelDetailResponseDTO> result = novelService.getNovelsByCategory(categoryId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(novelMapper).selectNovelsWithPagination(any());
+    }
+
+    @Test
+    void getNovelCount_ShouldReturnCount() {
+        // Arrange
+        NovelSearchRequestDTO request = new NovelSearchRequestDTO();
+        request.setCategoryId(1);
+        when(novelMapper.countNovels(request)).thenReturn(5L);
+
+        // Act
+        long result = novelService.getNovelCount(request);
+
+        // Assert
+        assertEquals(5L, result);
+        verify(novelMapper).countNovels(request);
+    }
+
+    @Test
+    void getNovelVoteCount_ShouldReturnVoteCount() {
+        // Arrange
+        Integer novelId = 1;
+        Novel novel = createTestNovel(novelId, "Test Novel");
+        novel.setVoteCnt(10);
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+
+        // Act
+        Integer result = novelService.getNovelVoteCount(novelId);
+
+        // Assert
+        assertEquals(10, result);
+        verify(novelMapper).selectByPrimaryKey(novelId);
+    }
+
+    @Test
+    void incrementVoteCount_ShouldIncrementVoteCount() {
+        // Arrange
+        Integer novelId = 1;
+        Novel novel = createTestNovel(novelId, "Test Novel");
+        novel.setVoteCnt(5);
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+        when(novelMapper.incrementVoteCount(novelId)).thenReturn(1);
+
+        // Act
+        novelService.incrementVoteCount(novelId);
+
+        // Assert
+        verify(novelMapper).incrementVoteCount(novelId);
+        verify(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
+    }
+
+    @Test
+    void updateNovelRatingAndCount_ShouldUpdateRatingAndCount() {
+        // Arrange
+        Integer novelId = 1;
+        Float avgRating = 4.5f;
+        Integer reviewCount = 10;
+        Novel novel = createTestNovel(novelId, "Test Novel");
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+        when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+
+        // Act
+        novelService.updateNovelRatingAndCount(novelId, avgRating, reviewCount);
+
+        // Assert
+        verify(novelMapper).selectByPrimaryKey(novelId);
+        verify(novelMapper).updateByPrimaryKeySelective(any(Novel.class));
+        verify(redisUtil).cacheNovel(eq(novelId), any(Novel.class));
+    }
+
+    @Test
+    void getNovelsByIds_ShouldReturnNovelsByIds() {
+        // Arrange
+        List<Integer> novelIds = Arrays.asList(1, 2);
+        List<Novel> novels = Arrays.asList(
+            createTestNovel(1, "Novel 1"),
+            createTestNovel(2, "Novel 2")
+        );
+
+        when(novelMapper.selectByIds(novelIds)).thenReturn(novels);
+
+        // Act
+        List<NovelDetailResponseDTO> result = novelService.getNovelsByIds(novelIds);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(novelMapper).selectByIds(novelIds);
+    }
+
+    @Test
+    void getNovelsByIds_WithEmptyList_ShouldReturnEmptyList() {
+        // Arrange
+        List<Integer> novelIds = new java.util.ArrayList<>();
+
+        // Act
+        List<NovelDetailResponseDTO> result = novelService.getNovelsByIds(novelIds);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(novelMapper, never()).selectByIds(any());
+    }
+
+    @Test
+    void unarchiveNovel_WithArchivedNovel_ShouldUpdateToDraft() {
+        // Arrange
+        Integer novelId = 1;
+        Novel novel = new Novel();
+        novel.setId(novelId);
+        novel.setStatus(4); // ARCHIVED
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+        when(novelMapper.updateByPrimaryKeySelective(any(Novel.class))).thenReturn(1);
+        doNothing().when(redisUtil).invalidateNovelCaches(novelId);
+
+        // Act
+        NovelDetailResponseDTO result = novelService.unarchiveNovel(novelId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("DRAFT", result.getStatus());
+        verify(novelMapper).selectByPrimaryKey(novelId);
+        verify(novelMapper).updateByPrimaryKeySelective(any(Novel.class));
+        verify(redisUtil).invalidateNovelCaches(novelId);
+    }
+
+    @Test
+    void unarchiveNovel_WithNonArchivedNovel_ShouldThrowException() {
+        // Arrange
+        Integer novelId = 1;
+        Novel novel = new Novel();
+        novel.setId(novelId);
+        novel.setStatus(0); // DRAFT
+
+        when(novelMapper.selectByPrimaryKey(novelId)).thenReturn(novel);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> novelService.unarchiveNovel(novelId));
+        verify(novelMapper).selectByPrimaryKey(novelId);
+    }
+
+    @Test
+    void getNovel_WithNullId_ShouldThrowException() {
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> novelService.getNovel(null));
+    }
+
     private Novel createTestNovel(Integer id, String title) {
         Novel novel = new Novel();
         novel.setId(id);

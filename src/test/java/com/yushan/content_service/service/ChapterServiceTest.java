@@ -680,4 +680,12 @@ public class ChapterServiceTest {
 
         verify(chapterMapper).selectByUuid(currentChapterUuid);
     }
+
+    @Test
+    void testGetChapterByUuid_WithNullUuid() {
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            chapterService.getChapterByUuid(null);
+        });
+    }
 }

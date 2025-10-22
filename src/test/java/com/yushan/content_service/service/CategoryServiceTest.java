@@ -166,6 +166,14 @@ class CategoryServiceTest {
     }
 
     @Test
+    void getCategoryById_ShouldThrowExceptionWhenIdIsNull() {
+        // When & Then
+        assertThatThrownBy(() -> categoryService.getCategoryById(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Category ID cannot be null");
+    }
+
+    @Test
     void getCategoryBySlug_ShouldReturnCategory() {
         // Given
         when(categoryMapper.selectBySlug("fantasy")).thenReturn(testCategory);
@@ -203,6 +211,22 @@ class CategoryServiceTest {
         assertThatThrownBy(() -> categoryService.getCategoryBySlug("nonexistent"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Category not found");
+    }
+
+    @Test
+    void getCategoryBySlug_ShouldThrowExceptionWhenSlugIsNull() {
+        // When & Then
+        assertThatThrownBy(() -> categoryService.getCategoryBySlug(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Category slug cannot be empty");
+    }
+
+    @Test
+    void getCategoryBySlug_ShouldThrowExceptionWhenSlugIsEmpty() {
+        // When & Then
+        assertThatThrownBy(() -> categoryService.getCategoryBySlug(""))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Category slug cannot be empty");
     }
 
     @Test
@@ -246,6 +270,22 @@ class CategoryServiceTest {
         assertThatThrownBy(() -> categoryService.createCategory("Fantasy", "Description"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Category with name 'Fantasy' already exists");
+    }
+
+    @Test
+    void createCategory_ShouldThrowExceptionWhenNameIsNull() {
+        // When & Then
+        assertThatThrownBy(() -> categoryService.createCategory(null, "Description"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Category name cannot be empty");
+    }
+
+    @Test
+    void createCategory_ShouldThrowExceptionWhenNameIsEmpty() {
+        // When & Then
+        assertThatThrownBy(() -> categoryService.createCategory("", "Description"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Category name cannot be empty");
     }
 
     @Test
@@ -339,6 +379,7 @@ class CategoryServiceTest {
     void hardDeleteCategory_ShouldPermanentlyDeleteCategory() {
         // Given
         when(categoryMapper.selectByPrimaryKey(1)).thenReturn(testCategory);
+        when(categoryMapper.countNovelsByCategory(1)).thenReturn(0);
         when(categoryMapper.deleteByPrimaryKey(1)).thenReturn(1);
 
         // When
@@ -347,6 +388,7 @@ class CategoryServiceTest {
         // Then
         assertThat(result).isTrue();
         verify(categoryMapper).selectByPrimaryKey(1);
+        verify(categoryMapper).countNovelsByCategory(1);
         verify(categoryMapper).deleteByPrimaryKey(1);
         verify(redisUtil).invalidateCategoryCaches();
     }
@@ -360,6 +402,36 @@ class CategoryServiceTest {
         assertThatThrownBy(() -> categoryService.hardDeleteCategory(999))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Category not found");
+    }
+
+    @Test
+    void hardDeleteCategory_ShouldThrowExceptionWhenCategoryHasNovels() {
+        // Given
+        when(categoryMapper.selectByPrimaryKey(1)).thenReturn(testCategory);
+        when(categoryMapper.countNovelsByCategory(1)).thenReturn(5);
+
+        // When & Then
+        assertThatThrownBy(() -> categoryService.hardDeleteCategory(1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Cannot delete category with novels");
+    }
+
+    @Test
+    void hardDeleteCategory_ShouldReturnFalseWhenDeleteFails() {
+        // Given
+        when(categoryMapper.selectByPrimaryKey(1)).thenReturn(testCategory);
+        when(categoryMapper.countNovelsByCategory(1)).thenReturn(0);
+        when(categoryMapper.deleteByPrimaryKey(1)).thenReturn(0);
+
+        // When
+        boolean result = categoryService.hardDeleteCategory(1);
+
+        // Then
+        assertThat(result).isFalse();
+        verify(categoryMapper).selectByPrimaryKey(1);
+        verify(categoryMapper).countNovelsByCategory(1);
+        verify(categoryMapper).deleteByPrimaryKey(1);
+        verify(redisUtil).invalidateCategoryCaches();
     }
 
     @Test
