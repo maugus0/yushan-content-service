@@ -2,100 +2,18 @@ spring:
   application:
     name: content-service
 
-  # PostgreSQL Configuration (disabled for initial setup)
-  datasource:
-    url: jdbc:postgresql://localhost:5432/yushan_content
-    username: yushan_user
-    password: change_me_in_production
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 20000
+  # Configuration will be loaded from Config Server
+  # Local configuration for development/testing only
+  config:
+    import: "optional:configserver:${CONFIG_SERVER_URI:http://localhost:8888}"
 
-  # JPA/Hibernate Configuration - Disabled (using MyBatis only)
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
-
-  # Flyway Configuration
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    validate-on-migrate: true
-
-  # MyBatis Configuration
+  # MyBatis Configuration (local only - no need for centralized config)
   mybatis:
     mapper-locations: classpath:/mapper/**Mapper.xml
     type-aliases-package: com.yushan.content_service.entity
     config-location: classpath:config/mybatis-config.xml
 
-  # Redis Configuration (disabled for initial setup)
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 2
-
-  # Elasticsearch Configuration
-  elasticsearch:
-    rest:
-      uris: http://localhost:9200
-      connection-timeout: 5
-      read-timeout: 30
-
-  # Kafka Configuration (Phase 2)
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: content-service
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      client-id: content-service
-      retries: 3
-      batch-size: 16384
-      linger-ms: 5
-      buffer-memory: 33554432
-      acks: all
-      enable-idempotence: true
-      compression-type: snappy
-      request-timeout-ms: 30000
-      delivery-timeout-ms: 120000
-      topic:
-        novel-events: novel-events
-        novel-views: novel-views
-        novel-status-changes: novel-status-changes
-        chapter-events: chapter-events
-        chapter-views: chapter-views
-        chapter-published: chapter-published
-
-  # Static Resource Configuration
-  web:
-    resources:
-      static-locations: classpath:/static/,file:uploads/
-      cache:
-        cachecontrol:
-          max-age: 31536000  # 1 year cache for images
-
-# Server Configuration
+# Server Configuration (local only)
 server:
   port: 8082
   servlet:
@@ -103,76 +21,11 @@ server:
   compression:
     enabled: true
 
-# Eureka Client Configuration
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${server.port}
-    lease-renewal-interval-in-seconds: 30
-    lease-expiration-duration-in-seconds: 90
-    metadata-map:
-      version: 1.0.0
-      description: Content management service for novels and chapters
-
-# Actuator Configuration
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  endpoint:
-    health:
-      show-details: always
-  metrics:
-    tags:
-      application: ${spring.application.name}
-
-# JWT Configuration
-jwt:
-  secret: "yushan-micro-service-secret-key-for-jwt-token-generation-and-validation-2024"
-  issuer: "yushan-micro-service"
-  algorithm: "HS256"
-
-# File Storage Configuration
-# For development: use local storage
-# For production: change to S3 storage
-app:
-  storage:
-    type: local  # Change to 's3' when deploying to AWS
-    local:
-      path: uploads
-      base-url: http://localhost:8082
-    # S3 Configuration (uncomment when deploying to AWS)
-    # s3:
-    #   bucket-name: your-bucket-name
-    #   region: us-east-1
-    #   access-key: your-access-key
-    #   secret-key: your-secret-key
-    #   base-url: https://your-bucket-name.s3.amazonaws.com
-  image:
-    max-file-size: 10485760  # 10MB in bytes
-    max-width: 4000
-    max-height: 4000
-    min-width: 200
-    min-height: 200
-    supported-formats: jpeg,jpg,png,gif,webp
-    standard-size:
-      width: 800
-      height: 600
-
-# Logging Configuration
+# Logging Configuration (local only)
 logging:
   level:
     com.yushan.content: DEBUG
     org.springframework.cloud: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

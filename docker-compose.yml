@@ -105,6 +105,9 @@ services:
 
       # Eureka Configuration
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://yushan-eureka-registry:8761/eureka/
+      
+      # Config Server Configuration
+      CONFIG_SERVER_URI: http://yushan-config-server:8888
 
       # Server Configuration
       SERVER_PORT: 8082
