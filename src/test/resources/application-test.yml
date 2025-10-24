@@ -36,3 +36,18 @@ logging:
     com.yushan.content_service: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
+
+# S3 Configuration for testing (mock values)
+app:
+  storage:
+    type: local  # Use local storage for tests
+    local:
+      path: uploads
+      base-url: http://localhost:8082
+    s3:
+      bucket-name: test-bucket
+      region: us-east-1
+      access-key: test-access-key
+      secret-key: test-secret-key
+      endpoint: https://test.endpoint.com
+      base-url: https://test.endpoint.com/test-bucket

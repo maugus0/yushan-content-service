@@ -109,6 +109,14 @@ services:
       # Config Server Configuration
       CONFIG_SERVER_URI: http://yushan-config-server:8888
 
+      # DigitalOcean Spaces Configuration
+      SPACES_ACCESS_KEY: ${SPACES_ACCESS_KEY}
+      SPACES_SECRET_KEY: ${SPACES_SECRET_KEY}
+      SPACES_BUCKET: ${SPACES_BUCKET}
+      SPACES_ENDPOINT: ${SPACES_ENDPOINT}
+      SPACES_REGION: ${SPACES_REGION:-sgp1}
+      STORAGE_TYPE: ${STORAGE_TYPE:-s3}
+
       # Server Configuration
       SERVER_PORT: 8082
     ports:
