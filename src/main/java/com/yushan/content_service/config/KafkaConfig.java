@@ -40,6 +40,15 @@ public class KafkaConfig {
     @Value("${spring.kafka.producer.buffer-memory:33554432}")
     private long bufferMemory;
 
+    @Value("${spring.kafka.producer.compression-type:none}")
+    private String compressionType;
+
+    @Value("${spring.kafka.producer.request-timeout-ms:30000}")
+    private int requestTimeoutMs;
+
+    @Value("${spring.kafka.producer.delivery-timeout-ms:120000}")
+    private int deliveryTimeoutMs;
+
     /**
      * Producer factory configuration
      */
@@ -67,12 +76,12 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.LINGER_MS_CONFIG, lingerMs);
         configProps.put(ProducerConfig.BUFFER_MEMORY_CONFIG, bufferMemory);
         
-        // Compression for better performance
-        configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        // Compression type from config
+        configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, compressionType);
         
         // Timeout settings
-        configProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 30000);
-        configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 120000);
+        configProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeoutMs);
+        configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, deliveryTimeoutMs);
         
         return new DefaultKafkaProducerFactory<>(configProps);
     }
