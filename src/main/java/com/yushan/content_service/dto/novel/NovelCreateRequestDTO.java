@@ -21,8 +21,8 @@ public class NovelCreateRequestDTO {
     @NotNull(message = "Category ID must not be null")
     private Integer categoryId;
 
-    @Pattern(regexp = "^data:image/(jpeg|jpg|png|gif|webp);base64,[A-Za-z0-9+/]+=*$", 
-             message = "Cover image must be a valid Base64 data URL for image")
+    @Pattern(regexp = "^(|data:image/(jpeg|jpg|png|gif|webp);base64,[A-Za-z0-9+/]+=*)$", 
+             message = "Cover image must be empty or a valid Base64 data URL for image")
     private String coverImgBase64;
 
     private Boolean isCompleted;

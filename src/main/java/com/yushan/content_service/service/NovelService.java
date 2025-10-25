@@ -550,6 +550,9 @@ public class NovelService {
         novel.setUpdateTime(new Date());
         novelMapper.updateByPrimaryKeySelective(novel);
         
+        // Invalidate cache since novel was updated
+        redisUtil.invalidateNovelCaches(novelId);
+        
         // Cache the updated novel data
         redisUtil.cacheNovel(novelId, novel);
     }
@@ -577,6 +580,9 @@ public class NovelService {
         novel.setStatus(NovelStatus.UNDER_REVIEW.getValue());
         novel.setUpdateTime(new Date());
         novelMapper.updateByPrimaryKeySelective(novel);
+        
+        // Invalidate cache since novel status changed
+        redisUtil.invalidateNovelCaches(novelId);
         
         // Publish Kafka event
         kafkaEventProducerService.publishNovelStatusChangedEvent(novel, previousStatus, NovelStatus.UNDER_REVIEW.toString(), userId, "Submitted for review");
@@ -648,6 +654,9 @@ public class NovelService {
         }
         
         novelMapper.updateByPrimaryKeySelective(novel);
+        
+        // Invalidate cache since novel status changed
+        redisUtil.invalidateNovelCaches(novelId);
         
         // Publish Kafka event
         kafkaEventProducerService.publishNovelStatusChangedEvent(novel, 
