@@ -354,9 +354,21 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
           
           # Wait for service to start
-          sleep 30
+          sleep 60
           
-          # Health check
+          # Health check with retry
+          for i in {1..5}; do
+            echo "Health check attempt $i/5..."
+            if curl -f http://localhost:8082/actuator/health; then
+              echo "Health check passed!"
+              break
+            else
+              echo "Health check failed, retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
+          
+          # Final health check
           curl -f http://localhost:8082/actuator/health || exit 1
           
           echo "Content Service deployed successfully!"
