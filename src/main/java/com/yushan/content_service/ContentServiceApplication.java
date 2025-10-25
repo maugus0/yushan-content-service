@@ -13,7 +13,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching            // Enable caching
 @EnableScheduling         // Enable scheduled tasks (for ranking calculations)
 public class ContentServiceApplication {
-
+	// Comment for DEMO
 	public static void main(String[] args) {
 		SpringApplication.run(ContentServiceApplication.class, args);
 	}
