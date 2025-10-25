@@ -308,7 +308,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [unit-tests, integration-tests, lint-quality, security-scan, docker-build]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.head_ref == 'ci-cd_testing')
     permissions:
       contents: read
       packages: read
@@ -385,35 +385,35 @@ jobs:
           echo "❌ Content Service production deployment failed!"
         fi
 
-  # dast-zap:
-  #   name: OWASP ZAP Baseline (staging)
-  #   runs-on: ubuntu-latest
-  #   needs: [staging-deploy]
-  #   if: needs.staging-deploy.result == 'success'
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-  #   - name: ZAP Baseline
-  #     uses: zaproxy/action-baseline@v0.13.0
-  #     with:
-  #       target: https://yushan-content-staging.up.railway.app
-  #       cmd_options: "-a -m 10 -J zap.json -w zap.md -r zap.html"
-  #   - name: Upload ZAP report
-  #     if: always()
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: zap-staging
-  #       path: |
-  #         zap.html
-  #         zap.json
-  #         zap.md
+  dast-zap:
+    name: OWASP ZAP Baseline (production)
+    runs-on: ubuntu-latest
+    needs: [production-deploy]
+    if: needs.production-deploy.result == 'success'
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: ZAP Baseline
+      uses: zaproxy/action-baseline@v0.13.0
+      with:
+        target: https://yushan.duckdns.org
+        cmd_options: "-a -m 10 -J zap.json -w zap.md -r zap.html"
+    - name: Upload ZAP report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: zap-production
+        path: |
+          zap.html
+          zap.json
+          zap.md
 
   generate-reports:
     name: Generate CI Summary & Collect Reports
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, lint-quality, security-scan, docker-build]
+    needs: [unit-tests, integration-tests, lint-quality, security-scan, docker-build, production-deploy, dast-zap]
     if: always()
     permissions:
       contents: read
@@ -445,13 +445,13 @@ jobs:
         fi
       continue-on-error: true
 
-    # - name: Download ZAP report
-    #   uses: actions/download-artifact@v4
-    #   if: always()
-    #   with:
-    #     name: zap-staging
-    #     path: reports/zap
-    #   continue-on-error: true
+    - name: Download ZAP report
+      uses: actions/download-artifact@v4
+      if: always()
+      with:
+        name: zap-production
+        path: reports/zap
+      continue-on-error: true
 
     - name: Create CI summary
       if: always()
@@ -473,11 +473,11 @@ jobs:
           else 
             echo "- Trivy SARIF: Not available (artifact not found or expired)"; 
           fi
-          # if [ -f reports/zap/zap.html ]; then 
-          #   echo "- ZAP Security Report: reports/zap/zap.html"; 
-          # else 
-          #   echo "- ZAP Security Report: Not available (artifact not found or expired)"; 
-          # fi
+          if [ -f reports/zap/zap.html ]; then 
+            echo "- ZAP Security Report: reports/zap/zap.html"; 
+          else 
+            echo "- ZAP Security Report: Not available (artifact not found or expired)"; 
+          fi
         } > summary.md
 
     - name: Upload consolidated report bundle
