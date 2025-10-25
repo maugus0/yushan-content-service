@@ -303,56 +303,87 @@ jobs:
         path: image-digest.txt
         retention-days: 30
 
-  # staging-deploy:
-  #   name: Deploy to Staging
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 20
-  #   needs: [unit-tests, integration-tests, lint-quality, security-scan, docker-build]
-  #   environment: yushan-content-staging
-  #   if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
-  #   permissions:
-  #     contents: read
-  #     packages: read
-  #     deployments: write
-  #   container: ghcr.io/railwayapp/cli:latest
-  #   env:
-  #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-  #     SVC_ID: yushan-content-staging
-  #   steps:
-  #   - name: Redeploy staging
-  #     run: railway redeploy --service $SVC_ID --yes
-  #   - name: Wait for deployment
-  #     run: sleep 180
-  #   - name: Install curl
-  #     run: apk add --no-cache curl
-  #   - name: Health Check
-  #     env:
-  #       STAGING_URL: https://yushan-content-staging.up.railway.app
-  #     run: |
-  #       echo "Smoke test $STAGING_URL/actuator/health"
-  #       for i in {1..30}; do
-  #         RESP=$(curl -fsSL -H "Accept: application/json" -H "User-Agent: GitHub-Actions" "$STAGING_URL/actuator/health" || true)
-  #         echo "Attempt $i/30: $RESP"
-  #         if echo "$RESP" | grep -q '"status":"UP"'; then
-  #           echo "Health OK"
-  #           exit 0
-  #         fi
-  #         sleep 5
-  #       done
-  #       echo "Health check FAILED after 30 attempts"
-  #       exit 1
-  #   - name: Install jq
-  #     run: apk add --no-cache jq
-  #   - name: Smoke Tests
-  #     env:
-  #       STAGING_URL: https://yushan-content-staging.up.railway.app
-  #     run: |
-  #       set -e
-  #       echo "Running smoke tests..."
-  #       curl -fsSL -H "User-Agent: GitHub-Actions" "$STAGING_URL/api/v1/health" | jq .
-  #       curl -fsSL -H "User-Agent: GitHub-Actions" "$STAGING_URL/actuator/info" | jq .
-  #       curl -fsSL -H "User-Agent: GitHub-Actions" "$STAGING_URL/actuator/metrics" | jq .
-  #       echo "All smoke tests passed!"
+  production-deploy:
+    name: Deploy to Production (DigitalOcean)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [unit-tests, integration-tests, lint-quality, security-scan, docker-build]
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions:
+      contents: read
+      packages: read
+      deployments: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download image digest
+      uses: actions/download-artifact@v4
+      with:
+        name: image-digest
+        path: .
+        
+    - name: Deploy to DigitalOcean
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.DO_CONTENT_SERVICE_HOST }}
+        username: ${{ secrets.DO_USERNAME }}
+        key: ${{ secrets.DO_SSH_KEY }}
+        script: |
+          # Pull latest image
+          docker pull ghcr.io/${{ github.repository }}:latest
+          
+          # Stop and remove old container
+          docker stop yushan-content-service || true
+          docker rm yushan-content-service || true
+          
+          # Start new container with production config
+          docker run -d --name yushan-content-service --restart unless-stopped -p 8082:8082 \
+            -e SPRING_PROFILES_ACTIVE=default \
+            -e DB_USERNAME=yushan_content -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} -e DB_NAME=yushan_content \
+            -e DB_HOST=${{ secrets.CONTENT_DB_HOST }} -e DB_PORT=5432 \
+            -e REDIS_HOST=${{ secrets.CONTENT_DB_HOST }} -e REDIS_PORT=6379 \
+            -e SPRING_ELASTICSEARCH_REST_URIS=http://${{ secrets.CONTENT_DB_HOST }}:9200 \
+            -e SPRING_KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_HOST }}:9092 \
+            -e SPACES_ACCESS_KEY=${{ secrets.SPACES_ACCESS_KEY }} -e SPACES_SECRET_KEY=${{ secrets.SPACES_SECRET_KEY }} -e SPACES_ENDPOINT=${{ secrets.SPACES_ENDPOINT }} -e SPACES_BUCKET=${{ secrets.SPACES_BUCKET }} -e SPACES_REGION=sgp1 -e STORAGE_TYPE=s3 \
+            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+            -e EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${{ secrets.EUREKA_HOST }}:8761/eureka/ \
+            -e CONFIG_SERVER_URI=http://${{ secrets.CONFIG_SERVER_HOST }}:8888 \
+            -e EUREKA_INSTANCE_IP_ADDRESS=${{ secrets.DO_CONTENT_SERVICE_HOST }} -e EUREKA_INSTANCE_PREFER_IP_ADDRESS=true \
+            ghcr.io/${{ github.repository }}:latest
+          
+          # Wait for service to start
+          sleep 30
+          
+          # Health check
+          curl -f http://localhost:8082/actuator/health || exit 1
+          
+          echo "Content Service deployed successfully!"
+          
+    - name: Production Health Check
+      run: |
+        echo "Testing production deployment..."
+        for i in {1..10}; do
+          RESP=$(curl -fsSL -H "Accept: application/json" "http://${{ secrets.DO_CONTENT_SERVICE_HOST }}:8082/actuator/health" || true)
+          echo "Attempt $i/10: $RESP"
+          if echo "$RESP" | grep -q '"status":"UP"'; then
+            echo "✅ Production health check passed!"
+            exit 0
+          fi
+          sleep 10
+        done
+        echo "❌ Production health check failed!"
+        exit 1
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Content Service deployed to production successfully!"
+        else
+          echo "❌ Content Service production deployment failed!"
+        fi
 
   # dast-zap:
   #   name: OWASP ZAP Baseline (staging)
