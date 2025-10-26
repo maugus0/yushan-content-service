@@ -340,6 +340,10 @@ jobs:
           
           # Start new container with production config
           docker run -d --name yushan-content-service --restart unless-stopped -p 8082:8082 \
+            --log-driver=syslog \
+            --log-opt syslog-address=udp://${{ secrets.LOGSTASH_HOST }}:${{ secrets.LOGSTASH_PORT }} \
+            --log-opt tag="content-service" \
+            --log-opt syslog-facility=local0 \
             -e SPRING_PROFILES_ACTIVE=default \
             -e DB_USERNAME=yushan_content -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} -e DB_NAME=yushan_content \
             -e DB_HOST=${{ secrets.CONTENT_DB_HOST }} -e DB_PORT=5432 \
