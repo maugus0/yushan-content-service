@@ -101,8 +101,20 @@ public class S3FileStorageService implements FileStorageService {
             
             getS3Client().putObject(putObjectRequest);
             
-            // Return public URL
-            return endpoint + "/" + bucketName + "/" + s3Key;
+            // Return public URL - use CDN URL for DigitalOcean Spaces
+            // Remove trailing slash from endpoint if exists
+            String cleanEndpoint = endpoint.endsWith("/") ? endpoint.substring(0, endpoint.length() - 1) : endpoint;
+            
+            // Check if this is DigitalOcean Spaces and use CDN URL
+            if (cleanEndpoint.contains("digitaloceanspaces.com")) {
+                // Parse region from endpoint (e.g., https://sgp1.digitaloceanspaces.com -> sgp1)
+                String parsedRegion = extractRegionFromEndpoint(cleanEndpoint);
+                // Build CDN URL: https://bucket.region.cdn.digitaloceanspaces.com/key
+                return "https://" + bucketName + "." + parsedRegion + ".cdn.digitaloceanspaces.com/" + s3Key;
+            }
+            
+            // Fallback to standard endpoint URL
+            return cleanEndpoint + "/" + bucketName + "/" + s3Key;
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to upload image to S3: " + e.getMessage(), e);
@@ -168,6 +180,25 @@ public class S3FileStorageService implements FileStorageService {
             return null;
         } catch (Exception e) {
             return null;
+        }
+    }
+    
+    private String extractRegionFromEndpoint(String endpoint) {
+        try {
+            // Extract region from endpoint like: https://sgp1.digitaloceanspaces.com
+            // Returns "sgp1"
+            if (endpoint.contains("digitaloceanspaces.com")) {
+                // https://sgp1.digitaloceanspaces.com -> extract sgp1
+                String host = endpoint.replace("https://", "").replace("http://", "");
+                String[] parts = host.split("\\.");
+                if (parts.length > 0) {
+                    return parts[0]; // Returns "sgp1"
+                }
+            }
+            // Fallback to default region
+            return region;
+        } catch (Exception e) {
+            return region;
         }
     }
 }
