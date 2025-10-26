@@ -47,6 +47,9 @@ public class SecurityConfig {
             // Disable CSRF for API endpoints
             .csrf(csrf -> csrf.disable())
             
+            // Disable CORS - handled by API Gateway
+            .cors(cors -> cors.disable())
+            
             // Configure session management
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

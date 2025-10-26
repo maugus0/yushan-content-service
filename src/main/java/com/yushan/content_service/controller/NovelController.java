@@ -30,7 +30,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/novels")
-@CrossOrigin(origins = "*")
 @Tag(name = "Novel Management", description = "APIs for managing novels")
 public class NovelController {
 

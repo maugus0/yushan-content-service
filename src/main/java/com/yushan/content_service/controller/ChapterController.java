@@ -29,7 +29,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/chapters")
-@CrossOrigin(origins = "*")
 @Tag(name = "Chapter Management", description = "APIs for managing novel chapters")
 public class ChapterController {
 

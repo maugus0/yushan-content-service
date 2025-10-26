@@ -24,7 +24,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/search")
-@CrossOrigin(origins = "*")
 @Tag(name = "Search", description = "APIs for searching novels and chapters")
 public class SearchController {
 
