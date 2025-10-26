@@ -21,6 +21,25 @@ server:
   compression:
     enabled: true
 
+# Actuator Configuration for Prometheus Metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: content-service
+      environment: production
+
 # Logging Configuration (local only)
 logging:
   level:
